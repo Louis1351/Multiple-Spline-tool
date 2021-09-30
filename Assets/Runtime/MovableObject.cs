@@ -50,6 +50,8 @@ public class MovableObject : MonoBehaviour
     [SerializeField]
     private bool isChangingDirection = false;
     [SerializeField]
+    private bool useCatmullRom = false;
+    [SerializeField]
     private bool loop = false;
     [SerializeField]
     private bool close = false;
@@ -214,6 +216,7 @@ public class MovableObject : MonoBehaviour
     {
         float dist = Mathf.Clamp(_dist, 0.0f, segments[segments.Length - 1].p2length);
 
+        Vector3 newPos = Vector3.zero;
         for (int i = 0; i < segments.Length; ++i)
         {
             if (dist >= segments[i].p1length && dist <= segments[i].p2length)
@@ -224,12 +227,59 @@ public class MovableObject : MonoBehaviour
                 }
 
                 float t = (dist - segments[i].p1length) / segments[i].length;
-                currentDir = segments[i].dir;
-                return Vector3.Lerp(segments[i].p1, segments[i].p2, t);
+
+                if (useCatmullRom)
+                {
+                    if (close)
+                    {
+                        newPos = GetCatmullRomPosition(t,
+                        segments[ClampListPos(i - 1)].p1,
+                        segments[ClampListPos(i)].p1,
+                        segments[ClampListPos(i)].p2,
+                        segments[ClampListPos(i + 1)].p2);
+                    }
+                    else
+                    {
+                        if (i == 0)
+                        {
+                            newPos = GetCatmullRomPosition(t,
+                            segments[ClampListPos(i)].p1,
+                            segments[ClampListPos(i)].p1,
+                            segments[ClampListPos(i)].p2,
+                            segments[ClampListPos(i + 1)].p2);
+                        }
+                        else if (i == segments.Length - 1)
+                        {
+                            newPos = GetCatmullRomPosition(t,
+                            segments[ClampListPos(i - 1)].p1,
+                            segments[ClampListPos(i)].p1,
+                            segments[ClampListPos(i)].p2,
+                            segments[ClampListPos(i)].p2);
+                        }
+                        else
+                        {
+                            newPos = GetCatmullRomPosition(t,
+                           segments[ClampListPos(i - 1)].p1,
+                           segments[ClampListPos(i)].p1,
+                           segments[ClampListPos(i)].p2,
+                           segments[ClampListPos(i + 1)].p2);
+                        }
+                    }
+
+                    currentDir = (newPos - transform.position).normalized;
+                    return newPos;
+                }
+                else
+                {
+                    currentDir = segments[i].dir;
+                    return Vector3.Lerp(segments[i].p1, segments[i].p2, t);
+                }
             }
         }
         return transform.localPosition;
     }
+
+
 
     private void UpdatePositionASC(bool _islooping = false)
     {
@@ -307,5 +357,38 @@ public class MovableObject : MonoBehaviour
             return currentDist;
         }
         else return currentDist;
+    }
+
+    public Vector3 GetCatmullRomPosition(float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
+    {
+        //The coefficients of the cubic polynomial (except the 0.5f * which I added later for performance)
+        Vector3 a = 2f * p1;
+        Vector3 b = p2 - p0;
+        Vector3 c = 2f * p0 - 5f * p1 + 4f * p2 - p3;
+        Vector3 d = -p0 + 3f * p1 - 3f * p2 + p3;
+
+        //The cubic polynomial: a + b * t + c * t^2 + d * t^3
+        Vector3 pos = 0.5f * (a + (b * t) + (c * t * t) + (d * t * t * t));
+
+        return pos;
+    }
+
+    public int ClampListPos(int pos)
+    {
+        if (pos < 0)
+        {
+            pos = segments.Length - 1;
+        }
+
+        if (pos > segments.Length)
+        {
+            pos = 1;
+        }
+        else if (pos > segments.Length - 1)
+        {
+            pos = 0;
+        }
+
+        return pos;
     }
 }

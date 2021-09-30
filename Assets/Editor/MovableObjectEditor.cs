@@ -19,6 +19,7 @@ public class MovableObjectEditor : Editor
     private SerializedProperty speed;
     private SerializedProperty useCurvedSpeed;
     private SerializedProperty curve;
+    private SerializedProperty useCatmullRom;
     private SerializedProperty loop;
     private SerializedProperty close;
     private SerializedProperty isReversed;
@@ -49,6 +50,8 @@ public class MovableObjectEditor : Editor
         EditorGUILayout.PropertyField(type);
 
         EditorGUILayout.PropertyField(isMovingOnStart);
+        EditorGUILayout.PropertyField(useCatmullRom);
+
         if (typeEnum != MovableObject.MovementType.PingPong)
         {
             EditorGUILayout.PropertyField(loop);
@@ -57,7 +60,7 @@ public class MovableObjectEditor : Editor
         {
             loop.boolValue = false;
         }
-        
+
         EditorGUILayout.PropertyField(close);
         EditorGUILayout.PropertyField(isChangingDirection);
 
@@ -163,6 +166,10 @@ public class MovableObjectEditor : Editor
 
         float radiusValue = radius.floatValue;
 
+        if (useCatmullRom.boolValue)
+        {
+            DisplayCatmullRomSpline();
+        }
         if (radiusValue <= 0.0f)
         {
             SetFreeSegments();
@@ -310,7 +317,78 @@ public class MovableObjectEditor : Editor
         isReversed = serializedObject.FindProperty("isReversed");
         startMovement = serializedObject.FindProperty("startMovement");
         endMovement = serializedObject.FindProperty("endMovement");
+        useCatmullRom = serializedObject.FindProperty("useCatmullRom");
         loop = serializedObject.FindProperty("loop");
         close = serializedObject.FindProperty("close");
+    }
+    private void DisplayCatmullRomSpline()
+    {
+        //Draw the Catmull-Rom spline between the points
+        for (int i = 0; i < segments.arraySize; ++i)
+        {
+            DisplayCatmullRomSpline(i);
+        }
+    }
+
+    private void DisplayCatmullRomSpline(int pos)
+    {
+        //The start position of the line
+        Vector3 lastPos = component.Segments[component.ClampListPos(pos)].p1;
+
+        //The spline's resolution
+        //Make sure it's is adding up to 1, so 0.3 will give a gap, but 0.2 will work
+        float resolution = 0.1f;
+
+        //How many times should we loop?
+        int loops = Mathf.FloorToInt(1f / resolution);
+        Vector3 newPos = Vector3.zero;
+        for (int i = 1; i <= loops; i++)
+        {
+            //Which t position are we at?
+            float t = i * resolution;
+            //Find the coordinate between the end points with a Catmull-Rom spline
+            if (close.boolValue)
+            {
+                newPos = component.GetCatmullRomPosition(t,
+             component.Segments[component.ClampListPos(pos - 1)].p1,
+             component.Segments[component.ClampListPos(pos)].p1,
+             component.Segments[component.ClampListPos(pos)].p2,
+             component.Segments[component.ClampListPos(pos + 1)].p2);
+            }
+            else
+            {
+                if (pos == 0)
+                {
+                    newPos = component.GetCatmullRomPosition(t,
+                component.Segments[component.ClampListPos(pos)].p1,
+                component.Segments[component.ClampListPos(pos)].p1,
+                component.Segments[component.ClampListPos(pos)].p2,
+                component.Segments[component.ClampListPos(pos + 1)].p2);
+                }
+                else if (pos == segments.arraySize - 1)
+                {
+                    newPos = component.GetCatmullRomPosition(t,
+                component.Segments[component.ClampListPos(pos - 1)].p1,
+                component.Segments[component.ClampListPos(pos)].p1,
+                component.Segments[component.ClampListPos(pos)].p2,
+                component.Segments[component.ClampListPos(pos)].p2);
+                }
+                else
+                {
+                    newPos = component.GetCatmullRomPosition(t,
+                   component.Segments[component.ClampListPos(pos - 1)].p1,
+                   component.Segments[component.ClampListPos(pos)].p1,
+                   component.Segments[component.ClampListPos(pos)].p2,
+                   component.Segments[component.ClampListPos(pos + 1)].p2);
+                }
+            }
+
+            //Draw this line segment
+            Handles.color = Color.blue;
+            Handles.DrawLine(lastPos, newPos);
+            Handles.color = Color.white;
+            //Save this pos so we can draw the next line segment
+            lastPos = newPos;
+        }
     }
 }
