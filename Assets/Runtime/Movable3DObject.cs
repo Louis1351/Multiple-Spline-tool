@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class MovableObject : MonoBehaviour
+public class Movable3DObject : MonoBehaviour
 {
     public enum MovementType
     {
@@ -64,7 +64,11 @@ public class MovableObject : MonoBehaviour
     [SerializeField]
     private float radius = 0.0f;
     [SerializeField]
+    private Vector3 rotation = Vector3.zero;
+    [SerializeField]
     private float currentDist = 0.0f;
+    [SerializeField]
+    private bool circleShape = false;
 
 #pragma warning restore 414
     public delegate void OnUpdate();
@@ -265,8 +269,9 @@ public class MovableObject : MonoBehaviour
                            segments[ClampListPos(i + 1)].p2);
                         }
                     }
-
-                    currentDir = (newPos - transform.position).normalized;
+                    Vector3 newDir = (newPos - transform.position).normalized;
+                    if (newDir != Vector3.zero)
+                        currentDir = newDir;
                     return newPos;
                 }
                 else
@@ -379,12 +384,7 @@ public class MovableObject : MonoBehaviour
         {
             pos = segments.Length - 1;
         }
-
-        if (pos > segments.Length)
-        {
-            pos = 1;
-        }
-        else if (pos > segments.Length - 1)
+        if (pos > segments.Length - 1)
         {
             pos = 0;
         }
