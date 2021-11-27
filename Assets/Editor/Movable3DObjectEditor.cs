@@ -29,7 +29,10 @@ public class Movable3DObjectEditor : Editor
     private SerializedProperty circleShape;
     private bool oldClose;
     private Movable3DObject.MovementType typeEnum;
-    private bool showPoints = false;
+    private Event currentEvt = null;
+    /*  private int idPointSelect = -2;
+      [SerializeField]*/
+    private List<int> idPointSelects;
     void OnAwake()
     {
         Initialize();
@@ -86,10 +89,21 @@ public class Movable3DObjectEditor : Editor
 
     private void ShowPoints()
     {
-        showPoints = EditorGUILayout.Foldout(showPoints, "Points");
-        if (showPoints)
-        {
+        // showPoints = EditorGUILayout.Foldout(showPoints, "Points");
 
+        /* if (showPoints)
+         {*/
+        GUILayout.BeginHorizontal();
+        GUILayout.BeginVertical("GroupBox");
+
+        EditorGUILayout.LabelField("Edition", EditorStyles.boldLabel);
+
+        int newSize = EditorGUILayout.IntField("Number of points", segments.arraySize);
+        if (newSize != segments.arraySize)
+            segments.arraySize = newSize;
+
+        if (!circleShape.boolValue)
+        {
             for (int i = 0; i < segments.arraySize; ++i)
             {
                 if (close.boolValue && i == segments.arraySize - 1)
@@ -98,22 +112,36 @@ public class Movable3DObjectEditor : Editor
                 SerializedProperty item = segments.GetArrayElementAtIndex(i);
                 SerializedProperty p1 = item.FindPropertyRelative("p1");
                 SerializedProperty p2 = item.FindPropertyRelative("p2");
-                if (i == 0)
+
+                if (idPointSelects.Contains(-1) && i == 0)
                 {
                     p1.vector3Value = EditorGUILayout.Vector3Field("point " + i, p1.vector3Value);
-                    p2.vector3Value = EditorGUILayout.Vector3Field("point " + (i + 1), p2.vector3Value);
                 }
-                else
+                if (idPointSelects.Contains(i))
                 {
                     p2.vector3Value = EditorGUILayout.Vector3Field("point " + (i + 1), p2.vector3Value);
                 }
             }
         }
+        else
+        {
+            EditorGUILayout.PropertyField(center);
+        }
+
+        GUILayout.EndVertical();
+        GUILayout.EndHorizontal();
+        //}
     }
 
     private void OnSceneGUI()
     {
+        currentEvt = Event.current;
+        // You'll need a control id to avoid messing with other tools!
+        int controlID = GUIUtility.GetControlID(FocusType.Passive);
+
+
         EditorGUI.BeginChangeCheck();
+
         if (segments.arraySize > 0)
             Tools.current = Tool.None;
 
@@ -130,11 +158,13 @@ public class Movable3DObjectEditor : Editor
         {
             SetCircleSegments(radius.floatValue);
         }
+
         if (EditorGUI.EndChangeCheck() && !Application.isPlaying)
         {
             currentDist.floatValue = component.GetCurrentDistance(startingPos.floatValue);
             Undo.RecordObject(target, "Changed Look Target");
         }
+
     }
 
     private void SetFreeSegments()
@@ -150,7 +180,7 @@ public class Movable3DObjectEditor : Editor
         {
             if (i == 0)
             {
-                newP1 = DrawHandle(i.ToString(), component.Segments[i].p1, Quaternion.identity);
+                newP1 = DrawHandle(-1, i.ToString(), component.Segments[i].p1, Quaternion.identity);
 
                 component.Segments[i].p1 = newP1;
                 firstP = newP1;
@@ -167,7 +197,7 @@ public class Movable3DObjectEditor : Editor
             }
             else
             {
-                newP2 = DrawHandle((i + 1).ToString(), component.Segments[i].p2, Quaternion.identity);
+                newP2 = DrawHandle(i, (i + 1).ToString(), component.Segments[i].p2, Quaternion.identity);
             }
 
             component.Segments[i].p2 = newP2;
@@ -188,15 +218,42 @@ public class Movable3DObjectEditor : Editor
         }
     }
 
-    private Vector3 DrawHandle(string name, Vector3 position, Quaternion rotation)
+    private Vector3 DrawHandle(int id, string name, Vector3 position, Quaternion rotation)
     {
+        float radius = 0.25f;
+        Vector3 newPos = position;
         GUIStyle style = new GUIStyle();
         style.normal.textColor = Color.white;
         style.fontStyle = FontStyle.Bold;
         style.fontSize = 15;
         style.alignment = TextAnchor.MiddleCenter;
-        Vector3 newPos = Handles.PositionHandle(position, Quaternion.identity);
-        Handles.Label(newPos, name, style);
+
+        if (Handles.Button(position, Quaternion.identity, radius, radius, Handles.SphereHandleCap))
+        {
+            if (currentEvt.control)
+            {
+                RemovePoint(id);
+            }
+            else if ((circleShape.boolValue && id == -1) || !circleShape.boolValue)
+            {
+                SelectPoint(id);
+            }
+        }
+
+        if (idPointSelects.Contains(id))
+        {
+            newPos = Handles.PositionHandle(position, Quaternion.identity);
+        }
+        else
+        {
+            if ((circleShape.boolValue && id == -1) || !circleShape.boolValue)
+            {
+                Handles.SphereHandleCap(0, position, Quaternion.identity, radius, EventType.Repaint);
+            }
+        }
+
+        Handles.Label(newPos + Vector3.up * radius * 2.0f, name, style);
+
         return newPos;
     }
 
@@ -213,7 +270,7 @@ public class Movable3DObjectEditor : Editor
 
         Quaternion eulerRot = Quaternion.Euler(rotation.vector3Value.x, rotation.vector3Value.y, rotation.vector3Value.z);
 
-        newCenter = DrawHandle("center", component.Center, Quaternion.identity);//Handles.PositionHandle(component.Center, Quaternion.identity);
+        newCenter = DrawHandle(-1, "center", component.Center, Quaternion.identity);//Handles.PositionHandle(component.Center, Quaternion.identity);
         component.Center = newCenter;
 
         float dist = 0.0f;
@@ -222,7 +279,7 @@ public class Movable3DObjectEditor : Editor
         {
             if (i == 0)
             {
-                newP1 = DrawHandle(i.ToString(), newCenter + eulerRot * new Vector3(Mathf.Cos(DivPI2 * i), Mathf.Sin(DivPI2 * i)) * _radius, Quaternion.identity);
+                newP1 = DrawHandle(i, i.ToString(), newCenter + eulerRot * new Vector3(Mathf.Cos(DivPI2 * i), Mathf.Sin(DivPI2 * i)) * _radius, Quaternion.identity);
 
                 component.Segments[i].p1 = newP1;
                 firstP = newP1;
@@ -239,7 +296,7 @@ public class Movable3DObjectEditor : Editor
             }
             else
             {
-                newP2 = DrawHandle((i + 1).ToString(), newCenter + eulerRot * new Vector3(Mathf.Cos(DivPI2 * (i + 1)), Mathf.Sin(DivPI2 * (i + 1))) * _radius, Quaternion.identity);
+                newP2 = DrawHandle(i, (i + 1).ToString(), newCenter + eulerRot * new Vector3(Mathf.Cos(DivPI2 * (i + 1)), Mathf.Sin(DivPI2 * (i + 1))) * _radius, Quaternion.identity);
             }
 
             component.Segments[i].p1length = dist;
@@ -287,6 +344,16 @@ public class Movable3DObjectEditor : Editor
         useCatmullRom = serializedObject.FindProperty("useCatmullRom");
         loop = serializedObject.FindProperty("loop");
         close = serializedObject.FindProperty("close");
+
+        if (idPointSelects == null)
+        {
+            idPointSelects = new List<int>();
+        }
+        else
+        {
+            idPointSelects.Clear();
+        }
+
     }
     private void DisplayCatmullRomSpline()
     {
@@ -409,15 +476,9 @@ public class Movable3DObjectEditor : Editor
         EditorGUILayout.PropertyField(close);
         EditorGUILayout.PropertyField(circleShape);
 
-        int newSize = EditorGUILayout.IntField("Number of points", segments.arraySize);
-        if (newSize != segments.arraySize)
-            segments.arraySize = newSize;
+        ShowPoints();
 
-        if (!circleShape.boolValue)
-        {
-            ShowPoints();
-        }
-        else
+        if (circleShape.boolValue)
             DisplayCircleOptions();
 
         GUILayout.EndVertical();
@@ -434,7 +495,6 @@ public class Movable3DObjectEditor : Editor
         EditorGUILayout.PropertyField(radius);
 
         EditorGUILayout.PropertyField(demiCircle);
-        EditorGUILayout.PropertyField(center);
         EditorGUILayout.PropertyField(rotation);
 
         if (close.boolValue)
@@ -494,8 +554,43 @@ public class Movable3DObjectEditor : Editor
 
     }
 
-    private void RemovePoint()
+    private void RemovePoint(int id)
     {
+        int length = component.Segments.Length;
+        int indexTmp = 0;
+        Movable3DObject.Segment[] tmpArray = new Movable3DObject.Segment[length];
+        System.Array.Copy(component.Segments, tmpArray, length);
 
+        component.Segments = new Movable3DObject.Segment[length - 1];
+
+        for (int i = 0; i < component.Segments.Length; ++i)
+        {
+            if (id == i)
+            {
+                component.Segments[i] = new Movable3DObject.Segment();
+                component.Segments[i].p1 = tmpArray[indexTmp - 1].p2;
+                component.Segments[i].p2 = tmpArray[indexTmp + 1].p1;
+            }
+            else
+            {
+                component.Segments[i] = new Movable3DObject.Segment(tmpArray[indexTmp]);
+                indexTmp++;
+            }
+        }
+
+        Repaint();
     }
+
+    private void SelectPoint(int id)
+    {
+        if (!currentEvt.shift)
+            idPointSelects.Clear();
+
+        if (!idPointSelects.Contains(id))
+        {
+            idPointSelects.Add(id);
+            Repaint();
+        }
+    }
+
 }

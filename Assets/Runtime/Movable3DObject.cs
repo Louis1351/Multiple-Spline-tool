@@ -20,6 +20,20 @@ public class Movable3DObject : MonoBehaviour
         public float length = 0.0f;
         public float p1length = 0.0f;
         public float p2length = 0.0f;
+
+        public Segment()
+        {
+        }
+
+        public Segment(Segment segment)
+        {
+            this.p1 = segment.p1;
+            this.p2 = segment.p2;
+            this.dir = segment.dir;
+            this.length = segment.length;
+            this.p1length = segment.p1length;
+            this.p2length = segment.p2length;
+        }
     }
 #pragma warning disable 414
     [SerializeField]
