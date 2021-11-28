@@ -30,8 +30,7 @@ public class Movable3DObjectEditor : Editor
     private bool oldClose;
     private Movable3DObject.MovementType typeEnum;
     private Event currentEvt = null;
-    /*  private int idPointSelect = -2;
-      [SerializeField]*/
+    private float radiusHandle = 0.25f;
     private List<int> idPointSelects;
     void OnAwake()
     {
@@ -135,12 +134,13 @@ public class Movable3DObjectEditor : Editor
 
     private void OnSceneGUI()
     {
-        currentEvt = Event.current;
-        // You'll need a control id to avoid messing with other tools!
-        int controlID = GUIUtility.GetControlID(FocusType.Passive);
-
-
         EditorGUI.BeginChangeCheck();
+
+        currentEvt = Event.current;
+
+        // You'll need a control id to avoid messing with other tools!
+        var controlID = GUIUtility.GetControlID(FocusType.Passive);
+        var eventType = currentEvt.GetTypeForControl(controlID);
 
         if (segments.arraySize > 0)
             Tools.current = Tool.None;
@@ -150,6 +150,7 @@ public class Movable3DObjectEditor : Editor
         {
             DisplayCatmullRomSpline();
         }
+
         if (!circleShape.boolValue)
         {
             SetFreeSegments();
@@ -159,14 +160,31 @@ public class Movable3DObjectEditor : Editor
             SetCircleSegments(radius.floatValue);
         }
 
+        RemovePoint();
+
         if (EditorGUI.EndChangeCheck() && !Application.isPlaying)
         {
             currentDist.floatValue = component.GetCurrentDistance(startingPos.floatValue);
             Undo.RecordObject(target, "Changed Look Target");
         }
-
     }
 
+    private bool RemovePoint()
+    {
+        if (currentEvt.control && currentEvt.button == 0)
+        {
+            for (int i = 0; i < component.Segments.Length; ++i)
+            {
+                if (Handles.Button(component.Segments[i].p1, Quaternion.identity, radiusHandle, radiusHandle, Handles.SphereHandleCap))
+                {
+                    RemovePoint(i);
+                    idPointSelects.Clear();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
     private void SetFreeSegments()
     {
         Vector3 firstP = Vector3.zero;
@@ -175,9 +193,9 @@ public class Movable3DObjectEditor : Editor
         Vector3 newP2 = Vector3.zero;
 
         float dist = 0.0f;
-
-        for (int i = 0; i < segments.arraySize; ++i)
+        for (int i = 0; i < component.Segments.Length; ++i)
         {
+
             if (i == 0)
             {
                 newP1 = DrawHandle(-1, i.ToString(), component.Segments[i].p1, Quaternion.identity);
@@ -188,6 +206,7 @@ public class Movable3DObjectEditor : Editor
             else
             {
                 newP1 = LastP;
+                if (i >= component.Segments.Length) break;
                 component.Segments[i].p1 = newP1;
             }
 
@@ -218,9 +237,9 @@ public class Movable3DObjectEditor : Editor
         }
     }
 
+
     private Vector3 DrawHandle(int id, string name, Vector3 position, Quaternion rotation)
     {
-        float radius = 0.25f;
         Vector3 newPos = position;
         GUIStyle style = new GUIStyle();
         style.normal.textColor = Color.white;
@@ -228,13 +247,10 @@ public class Movable3DObjectEditor : Editor
         style.fontSize = 15;
         style.alignment = TextAnchor.MiddleCenter;
 
-        if (Handles.Button(position, Quaternion.identity, radius, radius, Handles.SphereHandleCap))
+        if (currentEvt.modifiers != EventModifiers.Control &&
+        Handles.Button(position, Quaternion.identity, radiusHandle, radiusHandle, Handles.SphereHandleCap))
         {
-            if (currentEvt.control)
-            {
-                RemovePoint(id);
-            }
-            else if ((circleShape.boolValue && id == -1) || !circleShape.boolValue)
+            if ((circleShape.boolValue && id == -1) || !circleShape.boolValue)
             {
                 SelectPoint(id);
             }
@@ -248,11 +264,11 @@ public class Movable3DObjectEditor : Editor
         {
             if ((circleShape.boolValue && id == -1) || !circleShape.boolValue)
             {
-                Handles.SphereHandleCap(0, position, Quaternion.identity, radius, EventType.Repaint);
+                Handles.SphereHandleCap(0, position, Quaternion.identity, radiusHandle, EventType.Repaint);
             }
         }
 
-        Handles.Label(newPos + Vector3.up * radius * 2.0f, name, style);
+        Handles.Label(newPos + Vector3.up * radiusHandle * 2.0f, name, style);
 
         return newPos;
     }
@@ -287,6 +303,7 @@ public class Movable3DObjectEditor : Editor
             else
             {
                 newP1 = LastP;
+                if (i >= component.Segments.Length) break;
                 component.Segments[i].p1 = newP1;
             }
 
@@ -314,6 +331,8 @@ public class Movable3DObjectEditor : Editor
             Handles.DrawDottedLine(newP1, newP2, 5.0f);
 
             LastP = newP2;
+
+
         }
     }
 
@@ -565,17 +584,17 @@ public class Movable3DObjectEditor : Editor
 
         for (int i = 0; i < component.Segments.Length; ++i)
         {
-            if (id == i)
+            if (i == id)
             {
-                component.Segments[i] = new Movable3DObject.Segment();
-                component.Segments[i].p1 = tmpArray[indexTmp - 1].p2;
-                component.Segments[i].p2 = tmpArray[indexTmp + 1].p1;
+                indexTmp++;
+                component.Segments[i] = new Movable3DObject.Segment(tmpArray[indexTmp]);
+                component.Segments[i - 1].p2 = component.Segments[i].p1;
             }
             else
             {
                 component.Segments[i] = new Movable3DObject.Segment(tmpArray[indexTmp]);
-                indexTmp++;
             }
+            indexTmp++;
         }
 
         Repaint();
