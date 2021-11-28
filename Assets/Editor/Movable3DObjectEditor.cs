@@ -160,7 +160,14 @@ public class Movable3DObjectEditor : Editor
             SetCircleSegments(radius.floatValue);
         }
 
-        RemovePoint();
+        if (currentEvt.control && currentEvt.button == 0)
+        {
+            if (!RemovePoint())
+            {
+                if (currentEvt.type == EventType.MouseDown)
+                    AddPoint();
+            }
+        }
 
         if (EditorGUI.EndChangeCheck() && !Application.isPlaying)
         {
@@ -169,22 +176,6 @@ public class Movable3DObjectEditor : Editor
         }
     }
 
-    private bool RemovePoint()
-    {
-        if (currentEvt.control && currentEvt.button == 0)
-        {
-            for (int i = 0; i < component.Segments.Length; ++i)
-            {
-                if (Handles.Button(component.Segments[i].p1, Quaternion.identity, radiusHandle, radiusHandle, Handles.SphereHandleCap))
-                {
-                    RemovePoint(i);
-                    idPointSelects.Clear();
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
     private void SetFreeSegments()
     {
         Vector3 firstP = Vector3.zero;
@@ -570,7 +561,56 @@ public class Movable3DObjectEditor : Editor
     }
     private void AddPoint()
     {
+        Ray r = HandleUtility.GUIPointToWorldRay(currentEvt.mousePosition);
 
+        float dist = (component.Segments[component.Segments.Length - 1].p2 - r.origin).magnitude;
+
+        Vector3 position = r.origin + r.direction * dist;
+
+        int length = component.Segments.Length;
+
+        Movable3DObject.Segment[] tmpArray = new Movable3DObject.Segment[length];
+        System.Array.Copy(component.Segments, tmpArray, length);
+
+        component.Segments = new Movable3DObject.Segment[length + 1];
+
+        for (int i = 0; i < component.Segments.Length; ++i)
+        {
+            if (i == component.Segments.Length - 1)
+            {
+                component.Segments[i] = new Movable3DObject.Segment();
+                if (close.boolValue)
+                {
+                    component.Segments[i].p1 = position;
+                    component.Segments[i].p2 = component.Segments[0].p1;
+
+                    component.Segments[i - 1].p2 = position;
+                }
+                else
+                {
+                    component.Segments[i].p1 = component.Segments[i - 1].p2;
+                    component.Segments[i].p2 = position;
+                }
+            }
+            else component.Segments[i] = new Movable3DObject.Segment(tmpArray[i]);
+        }
+
+        Repaint();
+    }
+
+    private bool RemovePoint()
+    {
+        idPointSelects.Clear();
+        for (int i = 0; i < component.Segments.Length; ++i)
+        {
+            if (Handles.Button(component.Segments[i].p2, Quaternion.identity, radiusHandle, radiusHandle, Handles.SphereHandleCap)
+                || Handles.Button(component.Segments[i].p1, Quaternion.identity, radiusHandle, radiusHandle, Handles.SphereHandleCap))
+            {
+                RemovePoint(i);
+                return true;
+            }
+        }
+        return false;
     }
 
     private void RemovePoint(int id)
@@ -613,6 +653,31 @@ public class Movable3DObjectEditor : Editor
         {
             idPointSelects.Add(id);
             Repaint();
+        }
+    }
+
+    public static bool LineLineIntersection(out Vector3 intersection, Vector3 linePoint1,
+        Vector3 lineVec1, Vector3 linePoint2, Vector3 lineVec2)
+    {
+
+        Vector3 lineVec3 = linePoint2 - linePoint1;
+        Vector3 crossVec1and2 = Vector3.Cross(lineVec1, lineVec2);
+        Vector3 crossVec3and2 = Vector3.Cross(lineVec3, lineVec2);
+
+        float planarFactor = Vector3.Dot(lineVec3, crossVec1and2);
+
+        //is coplanar, and not parallel
+        if (Mathf.Abs(planarFactor) < 0.0001f
+                && crossVec1and2.sqrMagnitude > 0.0001f)
+        {
+            float s = Vector3.Dot(crossVec3and2, crossVec1and2) / crossVec1and2.sqrMagnitude;
+            intersection = linePoint1 + (lineVec1 * s);
+            return true;
+        }
+        else
+        {
+            intersection = Vector3.zero;
+            return false;
         }
     }
 
