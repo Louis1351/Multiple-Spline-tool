@@ -291,7 +291,7 @@ public class Movable3DObjectEditor : Editor
 
         float dist = 0.0f;
 
-        for (int i = 0; i < segments.arraySize; ++i)
+        for (int i = 0; i < component.Segments.Length; ++i)
         {
             if (i == 0)
             {
@@ -377,7 +377,7 @@ public class Movable3DObjectEditor : Editor
     private void DisplayCatmullRomSpline()
     {
         //Draw the Catmull-Rom spline between the points
-        for (int i = 0; i < segments.arraySize; ++i)
+        for (int i = 0; i < component.Segments.Length; ++i)
         {
             DisplayCatmullRomSpline(i);
         }
@@ -588,7 +588,11 @@ public class Movable3DObjectEditor : Editor
             {
                 indexTmp++;
                 component.Segments[i] = new Movable3DObject.Segment(tmpArray[indexTmp]);
-                component.Segments[i - 1].p2 = component.Segments[i].p1;
+
+                if ((i - 1) >= 0)
+                {
+                    component.Segments[i - 1].p2 = component.Segments[i].p1;
+                }
             }
             else
             {
