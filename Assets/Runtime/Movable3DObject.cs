@@ -283,7 +283,7 @@ public class Movable3DObject : MonoBehaviour
                            segments[ClampListPos(i + 1)].p2);
                         }
                     }
-                    Vector3 newDir = (newPos - transform.position).normalized;
+                    Vector3 newDir = (newPos - transform.localPosition).normalized;
                     if (newDir != Vector3.zero)
                         currentDir = newDir;
                     return newPos;

@@ -98,7 +98,7 @@ public class Movable3DObjectEditor : Editor
         EditorGUILayout.LabelField("Edition", EditorStyles.boldLabel);
 
         int newSize = EditorGUILayout.IntField("Number of points", segments.arraySize);
-        if (newSize != segments.arraySize)
+        if (newSize != segments.arraySize && newSize >= 0)
             segments.arraySize = newSize;
 
         if (!circleShape.boolValue)
@@ -144,6 +144,7 @@ public class Movable3DObjectEditor : Editor
 
         if (segments.arraySize > 0)
             Tools.current = Tool.None;
+        else return;
 
 
         if (useCatmullRom.boolValue)
@@ -178,6 +179,7 @@ public class Movable3DObjectEditor : Editor
 
     private void SetFreeSegments()
     {
+        Transform parent = component.transform.parent;
         Vector3 firstP = Vector3.zero;
         Vector3 LastP = Vector3.zero;
         Vector3 newP1 = Vector3.zero;
@@ -222,7 +224,11 @@ public class Movable3DObjectEditor : Editor
 
             component.Segments[i].dir = (newP2 - newP1).normalized;
 
-            Handles.DrawDottedLine(newP1, newP2, 5.0f);
+            if (parent)
+            {
+                Handles.DrawDottedLine(parent.TransformPoint(newP1), parent.TransformPoint(newP2), 5.0f);
+            }
+            else Handles.DrawDottedLine(newP1, newP2, 5.0f);
 
             LastP = newP2;
         }
@@ -231,6 +237,7 @@ public class Movable3DObjectEditor : Editor
 
     private Vector3 DrawHandle(int id, string name, Vector3 position, Quaternion rotation)
     {
+        Transform parent = component.transform.parent;
         Vector3 newPos = position;
         GUIStyle style = new GUIStyle();
         style.normal.textColor = Color.white;
@@ -239,7 +246,7 @@ public class Movable3DObjectEditor : Editor
         style.alignment = TextAnchor.MiddleCenter;
 
         if (currentEvt.modifiers != EventModifiers.Control &&
-        Handles.Button(position, Quaternion.identity, radiusHandle, radiusHandle, Handles.SphereHandleCap))
+        Handles.Button((parent) ? parent.transform.TransformPoint(position) : position, Quaternion.identity, radiusHandle, radiusHandle, Handles.SphereHandleCap))
         {
             if ((circleShape.boolValue && id == -1) || !circleShape.boolValue)
             {
@@ -249,23 +256,29 @@ public class Movable3DObjectEditor : Editor
 
         if (idPointSelects.Contains(id))
         {
-            newPos = Handles.PositionHandle(position, Quaternion.identity);
+            if (parent)
+            {
+                Vector3 npos = Handles.PositionHandle(parent.TransformPoint(position), Quaternion.identity);
+                newPos = parent.InverseTransformPoint(npos);
+            }
+            else newPos = Handles.PositionHandle(position, Quaternion.identity);
         }
         else
         {
             if ((circleShape.boolValue && id == -1) || !circleShape.boolValue)
             {
-                Handles.SphereHandleCap(0, position, Quaternion.identity, radiusHandle, EventType.Repaint);
+                Handles.SphereHandleCap(0, (parent) ? parent.TransformPoint(position) : position, Quaternion.identity, radiusHandle, EventType.Repaint);
             }
         }
 
-        Handles.Label(newPos + Vector3.up * radiusHandle * 2.0f, name, style);
+        Handles.Label((parent) ? parent.TransformPoint(position) : position + Vector3.up * radiusHandle * 2.0f, name, style);
 
         return newPos;
     }
 
     private void SetCircleSegments(float _radius)
     {
+        Transform parent = component.transform.parent;
         Vector3 firstP = Vector3.zero;
         Vector3 LastP = Vector3.zero;
         Vector3 newP1 = Vector3.zero;
@@ -318,8 +331,12 @@ public class Movable3DObjectEditor : Editor
             component.Segments[i].p2length = dist;
 
             component.Segments[i].dir = (newP2 - newP1).normalized;
-
-            Handles.DrawDottedLine(newP1, newP2, 5.0f);
+            if (parent)
+            {
+                Handles.DrawDottedLine(parent.TransformPoint(newP1), parent.TransformPoint(newP2), 5.0f);
+            }
+            else
+                Handles.DrawDottedLine(newP1, newP2, 5.0f);
 
             LastP = newP2;
 
@@ -376,6 +393,7 @@ public class Movable3DObjectEditor : Editor
 
     private void DisplayCatmullRomSpline(int pos)
     {
+        Transform parent = component.transform.parent;
         //The start position of the line
         Vector3 lastPos = component.Segments[component.ClampListPos(pos)].p1;
 
@@ -429,7 +447,11 @@ public class Movable3DObjectEditor : Editor
 
             //Draw this line segment
             Handles.color = Color.blue;
-            Handles.DrawLine(lastPos, newPos);
+            if (parent)
+            {
+                Handles.DrawLine(parent.TransformPoint(lastPos), parent.TransformPoint(newPos));
+            }
+            else Handles.DrawLine(lastPos, newPos);
             Handles.color = Color.white;
             //Save this pos so we can draw the next line segment
             lastPos = newPos;
@@ -600,16 +622,34 @@ public class Movable3DObjectEditor : Editor
 
     private bool RemovePoint()
     {
+        Transform parent = component.transform.parent;
+
         idPointSelects.Clear();
-        for (int i = 0; i < component.Segments.Length; ++i)
+        if (parent)
         {
-            if (Handles.Button(component.Segments[i].p2, Quaternion.identity, radiusHandle, radiusHandle, Handles.SphereHandleCap)
-                || Handles.Button(component.Segments[i].p1, Quaternion.identity, radiusHandle, radiusHandle, Handles.SphereHandleCap))
+            for (int i = 0; i < component.Segments.Length; ++i)
             {
-                RemovePoint(i);
-                return true;
+                if (Handles.Button(parent.TransformPoint(component.Segments[i].p2), Quaternion.identity, radiusHandle, radiusHandle, Handles.SphereHandleCap)
+                    || Handles.Button(parent.TransformPoint(component.Segments[i].p1), Quaternion.identity, radiusHandle, radiusHandle, Handles.SphereHandleCap))
+                {
+                    RemovePoint(i);
+                    return true;
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < component.Segments.Length; ++i)
+            {
+                if (Handles.Button(component.Segments[i].p2, Quaternion.identity, radiusHandle, radiusHandle, Handles.SphereHandleCap)
+                    || Handles.Button(component.Segments[i].p1, Quaternion.identity, radiusHandle, radiusHandle, Handles.SphereHandleCap))
+                {
+                    RemovePoint(i);
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 
@@ -656,7 +696,7 @@ public class Movable3DObjectEditor : Editor
         }
     }
 
-    public static bool LineLineIntersection(out Vector3 intersection, Vector3 linePoint1,
+    /*public static bool LineLineIntersection(out Vector3 intersection, Vector3 linePoint1,
         Vector3 lineVec1, Vector3 linePoint2, Vector3 lineVec2)
     {
 
@@ -679,6 +719,6 @@ public class Movable3DObjectEditor : Editor
             intersection = Vector3.zero;
             return false;
         }
-    }
+    }*/
 
 }
