@@ -2,6 +2,60 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+public static class SplineUtils
+{
+    public static int ClampListPos(this Segment[] segments, int pos)
+    {
+        if (pos < 0)
+        {
+            pos = segments.Length - 1;
+        }
+        if (pos > segments.Length - 1)
+        {
+            pos = 0;
+        }
+
+        return pos;
+    }
+
+    public static Vector3 GetCatmullRomPosition(float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
+    {
+        //The coefficients of the cubic polynomial (except the 0.5f * which I added later for performance)
+        Vector3 a = 2f * p1;
+        Vector3 b = p2 - p0;
+        Vector3 c = 2f * p0 - 5f * p1 + 4f * p2 - p3;
+        Vector3 d = -p0 + 3f * p1 - 3f * p2 + p3;
+
+        //The cubic polynomial: a + b * t + c * t^2 + d * t^3
+        Vector3 pos = 0.5f * (a + (b * t) + (c * t * t) + (d * t * t * t));
+
+        return pos;
+    }
+}
+[System.Serializable]
+public class Segment
+{
+    public Vector3 p1;
+    public Vector3 p2;
+    public Vector3 dir;
+    public float length = 0.0f;
+    public float p1length = 0.0f;
+    public float p2length = 0.0f;
+
+    public Segment()
+    {
+    }
+
+    public Segment(Segment segment)
+    {
+        this.p1 = segment.p1;
+        this.p2 = segment.p2;
+        this.dir = segment.dir;
+        this.length = segment.length;
+        this.p1length = segment.p1length;
+        this.p2length = segment.p2length;
+    }
+}
 
 public class Movable3DObject : MonoBehaviour
 {
@@ -11,30 +65,7 @@ public class Movable3DObject : MonoBehaviour
         PingPong
     }
 
-    [System.Serializable]
-    public class Segment
-    {
-        public Vector3 p1;
-        public Vector3 p2;
-        public Vector3 dir;
-        public float length = 0.0f;
-        public float p1length = 0.0f;
-        public float p2length = 0.0f;
 
-        public Segment()
-        {
-        }
-
-        public Segment(Segment segment)
-        {
-            this.p1 = segment.p1;
-            this.p2 = segment.p2;
-            this.dir = segment.dir;
-            this.length = segment.length;
-            this.p1length = segment.p1length;
-            this.p2length = segment.p2length;
-        }
-    }
 #pragma warning disable 414
     [SerializeField]
     private UnityEvent startMovement = null;
@@ -45,7 +76,7 @@ public class Movable3DObject : MonoBehaviour
     [SerializeField]
     private MovementType type = MovementType.Linear;
     [SerializeField]
-    private Segment[] segments = null;
+    public Segment[] segments = null;
     [SerializeField]
     private float speed = 5.0f;
     [SerializeField]
@@ -71,7 +102,7 @@ public class Movable3DObject : MonoBehaviour
     private bool close = false;
 
     [SerializeField]
-    private Vector3 center;
+    public Vector3 center;
     [SerializeField]
     private bool demiCircle = false;
 
@@ -94,7 +125,7 @@ public class Movable3DObject : MonoBehaviour
 
     public float CurrentDist { get => currentDist; }
     public bool Pingpong { get => pingpong; set => pingpong = value; }
-    public Segment[] Segments { get => segments; set => segments = value; }
+
     public float Speed
     {
         get
@@ -250,37 +281,37 @@ public class Movable3DObject : MonoBehaviour
                 {
                     if (close)
                     {
-                        newPos = GetCatmullRomPosition(t,
-                        segments[ClampListPos(i - 1)].p1,
-                        segments[ClampListPos(i)].p1,
-                        segments[ClampListPos(i)].p2,
-                        segments[ClampListPos(i + 1)].p2);
+                        newPos = SplineUtils.GetCatmullRomPosition(t,
+                        segments[segments.ClampListPos(i - 1)].p1,
+                        segments[segments.ClampListPos(i)].p1,
+                        segments[segments.ClampListPos(i)].p2,
+                        segments[segments.ClampListPos(i + 1)].p2);
                     }
                     else
                     {
                         if (i == 0)
                         {
-                            newPos = GetCatmullRomPosition(t,
-                            segments[ClampListPos(i)].p1,
-                            segments[ClampListPos(i)].p1,
-                            segments[ClampListPos(i)].p2,
-                            segments[ClampListPos(i + 1)].p2);
+                            newPos = SplineUtils.GetCatmullRomPosition(t,
+                            segments[segments.ClampListPos(i)].p1,
+                            segments[segments.ClampListPos(i)].p1,
+                            segments[segments.ClampListPos(i)].p2,
+                            segments[segments.ClampListPos(i + 1)].p2);
                         }
                         else if (i == segments.Length - 1)
                         {
-                            newPos = GetCatmullRomPosition(t,
-                            segments[ClampListPos(i - 1)].p1,
-                            segments[ClampListPos(i)].p1,
-                            segments[ClampListPos(i)].p2,
-                            segments[ClampListPos(i)].p2);
+                            newPos = SplineUtils.GetCatmullRomPosition(t,
+                            segments[segments.ClampListPos(i - 1)].p1,
+                            segments[segments.ClampListPos(i)].p1,
+                            segments[segments.ClampListPos(i)].p2,
+                            segments[segments.ClampListPos(i)].p2);
                         }
                         else
                         {
-                            newPos = GetCatmullRomPosition(t,
-                           segments[ClampListPos(i - 1)].p1,
-                           segments[ClampListPos(i)].p1,
-                           segments[ClampListPos(i)].p2,
-                           segments[ClampListPos(i + 1)].p2);
+                            newPos = SplineUtils.GetCatmullRomPosition(t,
+                           segments[segments.ClampListPos(i - 1)].p1,
+                           segments[segments.ClampListPos(i)].p1,
+                           segments[segments.ClampListPos(i)].p2,
+                           segments[segments.ClampListPos(i + 1)].p2);
                         }
                     }
                     Vector3 newDir = (newPos - transform.localPosition).normalized;
@@ -376,33 +407,5 @@ public class Movable3DObject : MonoBehaviour
             return currentDist;
         }
         else return currentDist;
-    }
-
-    public Vector3 GetCatmullRomPosition(float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
-    {
-        //The coefficients of the cubic polynomial (except the 0.5f * which I added later for performance)
-        Vector3 a = 2f * p1;
-        Vector3 b = p2 - p0;
-        Vector3 c = 2f * p0 - 5f * p1 + 4f * p2 - p3;
-        Vector3 d = -p0 + 3f * p1 - 3f * p2 + p3;
-
-        //The cubic polynomial: a + b * t + c * t^2 + d * t^3
-        Vector3 pos = 0.5f * (a + (b * t) + (c * t * t) + (d * t * t * t));
-
-        return pos;
-    }
-
-    public int ClampListPos(int pos)
-    {
-        if (pos < 0)
-        {
-            pos = segments.Length - 1;
-        }
-        if (pos > segments.Length - 1)
-        {
-            pos = 0;
-        }
-
-        return pos;
     }
 }

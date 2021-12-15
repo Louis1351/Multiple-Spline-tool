@@ -4,29 +4,16 @@ using UnityEngine;
 
 public class PipeMeshGenerator : MonoBehaviour
 {
-    [System.Serializable]
-    public class Segment
-    {
-        public Vector3 p1;
-        public Vector3 p2;
-        public Vector3 dir;
-        public float length = 0.0f;
-        public float p1length = 0.0f;
-        public float p2length = 0.0f;
-    }
     [SerializeField]
-    private Segment[] segments = null;
-
+    public Segment[] segments = null;
 
     [SerializeField]
     private bool useCatmullRom = false;
     [SerializeField]
-    private bool loop = false;
-    [SerializeField]
     private bool close = false;
 
     [SerializeField]
-    private Vector3 center;
+    public Vector3 center;
     [SerializeField]
     private bool demiCircle = false;
 
@@ -39,6 +26,8 @@ public class PipeMeshGenerator : MonoBehaviour
 
 #pragma warning restore 414
     private Vector3 currentDir = Vector3.zero;
+    [SerializeField]
+    private bool circleShape = false;
 
     [SerializeField]
     private int nbQuad = 4;
