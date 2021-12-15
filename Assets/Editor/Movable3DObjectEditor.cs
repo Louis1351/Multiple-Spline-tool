@@ -6,29 +6,35 @@ using UnityEngine;
 [CustomEditor(typeof(Movable3DObject))]
 public class Movable3DObjectEditor : Editor
 {
+    /////////movable///////
     private Movable3DObject component;
     private SerializedProperty type;
     private SerializedProperty isMovingOnStart;
     private SerializedProperty isChangingDirection;
     private SerializedProperty startingPos;
+    private SerializedProperty speed;
+    private SerializedProperty useCurvedSpeed;
+    private SerializedProperty curve;
+
+    private SerializedProperty isReversed;
+    private SerializedProperty startMovement;
+    private SerializedProperty endMovement;
+
+    private Movable3DObject.MovementType typeEnum;
+    ///////////////////
     private SerializedProperty center;
     private SerializedProperty demiCircle;
     private SerializedProperty rotation;
     private SerializedProperty currentDist;
     private SerializedProperty radius;
     private SerializedProperty segments;
-    private SerializedProperty speed;
-    private SerializedProperty useCurvedSpeed;
-    private SerializedProperty curve;
+
     private SerializedProperty useCatmullRom;
     private SerializedProperty loop;
     private SerializedProperty close;
-    private SerializedProperty isReversed;
-    private SerializedProperty startMovement;
-    private SerializedProperty endMovement;
+
     private SerializedProperty circleShape;
     private bool oldClose;
-    private Movable3DObject.MovementType typeEnum;
     private Event currentEvt = null;
     private float radiusHandle = 0.25f;
     private List<int> idPointSelects;
