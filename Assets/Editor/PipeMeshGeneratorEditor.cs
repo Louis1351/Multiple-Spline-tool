@@ -11,6 +11,7 @@ public class PipeMeshGeneratorEditor : SplineEditor
     private SerializedProperty nbQuad;
     private SerializedProperty width;
     private SerializedProperty material;
+    private SerializedProperty autoGenerate;
 
     void OnAwake()
     {
@@ -36,6 +37,10 @@ public class PipeMeshGeneratorEditor : SplineEditor
 
         if (EditorGUI.EndChangeCheck() && !Application.isPlaying)
         {
+            if (autoGenerate.boolValue)
+            {
+                component.Generate();
+            }
         }
     }
 
@@ -45,6 +50,10 @@ public class PipeMeshGeneratorEditor : SplineEditor
 
         if (EditorGUI.EndChangeCheck() && !Application.isPlaying)
         {
+            if (autoGenerate.boolValue)
+            {
+                component.Generate();
+            }
             Undo.RecordObject(target, "Changed Look Target");
         }
     }
@@ -59,10 +68,24 @@ public class PipeMeshGeneratorEditor : SplineEditor
         EditorGUILayout.PropertyField(width);
         EditorGUILayout.PropertyField(material);
 
-        if (GUILayout.Button("Generate"))
+        if (!autoGenerate.boolValue && GUILayout.Button("Generate"))
         {
             component.Generate();
         }
+
+        DisplayDebug();
+        
+        GUILayout.EndVertical();
+        GUILayout.EndHorizontal();
+    }
+
+    private void DisplayDebug()
+    {
+        GUILayout.BeginHorizontal();
+        GUILayout.BeginVertical("GroupBox");
+
+        EditorGUILayout.LabelField("Debug", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(autoGenerate);
 
         GUILayout.EndVertical();
         GUILayout.EndHorizontal();
@@ -76,6 +99,8 @@ public class PipeMeshGeneratorEditor : SplineEditor
         nbQuad = serializedObject.FindProperty("nbQuad");
         width = serializedObject.FindProperty("width");
         material = serializedObject.FindProperty("material");
+
+        autoGenerate = serializedObject.FindProperty("autoGenerate");
     }
 }
 

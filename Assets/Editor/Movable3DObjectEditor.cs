@@ -109,9 +109,25 @@ public class Movable3DObjectEditor : SplineEditor
         GUILayout.BeginVertical("GroupBox");
 
         EditorGUILayout.LabelField("Transform", EditorStyles.boldLabel);
+
+        GUILayout.BeginHorizontal();
+        GUILayout.BeginVertical("GroupBox");
+
+        EditorGUILayout.LabelField("Position", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(startingPos);
+
+        GUILayout.EndVertical();
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.BeginVertical("GroupBox");
+
+        EditorGUILayout.LabelField("Rotation", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(isChangingDirection);
 
+        GUILayout.EndVertical();
+        GUILayout.EndHorizontal();
+        
         GUILayout.EndVertical();
         GUILayout.EndHorizontal();
     }
@@ -123,7 +139,7 @@ public class Movable3DObjectEditor : SplineEditor
         GUILayout.BeginHorizontal();
         GUILayout.BeginVertical("GroupBox");
 
-        EditorGUILayout.LabelField("Movement", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Movement Options", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(type);
 
         if (typeEnum != Movable3DObject.MovementType.PingPong)

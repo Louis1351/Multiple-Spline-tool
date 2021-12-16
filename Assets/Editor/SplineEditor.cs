@@ -101,7 +101,7 @@ public class SplineEditor : Editor
         //}
     }
 
-    public void OnSceneGUI(Transform trComp, ref Segment[] segmentsComp, ref Vector3 center)
+    public void OnSceneGUI(Transform trComp, ref Spline.Segment[] segmentsComp, ref Vector3 center)
     {
         EditorGUI.BeginChangeCheck();
 
@@ -140,7 +140,7 @@ public class SplineEditor : Editor
         }
     }
 
-    private void SetFreeSegments(Transform trComp, ref Segment[] segmentsComp)
+    private void SetFreeSegments(Transform trComp, ref Spline.Segment[] segmentsComp)
     {
         Transform parent = trComp.parent;
         Vector3 firstP = Vector3.zero;
@@ -197,7 +197,7 @@ public class SplineEditor : Editor
         }
     }
 
-    private void SetCircleSegments(Transform trComp, ref Segment[] segmentsComp, ref Vector3 center, float _radius)
+    private void SetCircleSegments(Transform trComp, ref Spline.Segment[] segmentsComp, ref Vector3 center, float _radius)
     {
         Transform parent = trComp.parent;
         Vector3 firstP = Vector3.zero;
@@ -330,7 +330,7 @@ public class SplineEditor : Editor
         }
     }
 
-    private void DisplayCatmullRomSpline(Transform trComp, ref Segment[] segmentsComp)
+    private void DisplayCatmullRomSpline(Transform trComp, ref Spline.Segment[] segmentsComp)
     {
         //Draw the Catmull-Rom spline between the points
         for (int i = 0; i < segmentsComp.Length; ++i)
@@ -339,7 +339,7 @@ public class SplineEditor : Editor
         }
     }
 
-    private void DisplayCatmullRomSpline(Transform trComp, ref Segment[] segmentsComp, int pos)
+    private void DisplayCatmullRomSpline(Transform trComp, ref Spline.Segment[] segmentsComp, int pos)
     {
         Transform parent = trComp.parent;
         //The start position of the line
@@ -459,7 +459,7 @@ public class SplineEditor : Editor
         GUILayout.EndHorizontal();
     }
 
-    private void AddPoint(Transform trComp, ref Segment[] segmentsComp)
+    private void AddPoint(Transform trComp, ref Spline.Segment[] segmentsComp)
     {
         Transform parent = trComp.parent;
 
@@ -481,16 +481,16 @@ public class SplineEditor : Editor
 
         int length = segmentsComp.Length;
 
-        Segment[] tmpArray = new Segment[length];
+        Spline.Segment[] tmpArray = new Spline.Segment[length];
         System.Array.Copy(segmentsComp, tmpArray, length);
 
-        segmentsComp = new Segment[length + 1];
+        segmentsComp = new Spline.Segment[length + 1];
 
         for (int i = 0; i < segmentsComp.Length; ++i)
         {
             if (i == segmentsComp.Length - 1)
             {
-                segmentsComp[i] = new Segment();
+                segmentsComp[i] = new Spline.Segment();
                 if (close.boolValue)
                 {
                     segmentsComp[i].p1 = position;
@@ -504,13 +504,13 @@ public class SplineEditor : Editor
                     segmentsComp[i].p2 = position;
                 }
             }
-            else segmentsComp[i] = new Segment(tmpArray[i]);
+            else segmentsComp[i] = new Spline.Segment(tmpArray[i]);
         }
 
         Repaint();
     }
 
-    private bool RemovePoint(Transform trComp, ref Segment[] segmentsComp)
+    private bool RemovePoint(Transform trComp, ref Spline.Segment[] segmentsComp)
     {
         Transform parent = trComp.parent;
 
@@ -543,21 +543,21 @@ public class SplineEditor : Editor
         return false;
     }
 
-    private void RemovePoint(ref Segment[] segmentsComp, int id)
+    private void RemovePoint(ref Spline.Segment[] segmentsComp, int id)
     {
         int length = segmentsComp.Length;
         int indexTmp = 0;
-        Segment[] tmpArray = new Segment[length];
+        Spline.Segment[] tmpArray = new Spline.Segment[length];
         System.Array.Copy(segmentsComp, tmpArray, length);
 
-        segmentsComp = new Segment[length - 1];
+        segmentsComp = new Spline.Segment[length - 1];
 
         for (int i = 0; i < segmentsComp.Length; ++i)
         {
             if (i == id)
             {
                 indexTmp++;
-                segmentsComp[i] = new Segment(tmpArray[indexTmp]);
+                segmentsComp[i] = new Spline.Segment(tmpArray[indexTmp]);
 
                 if ((i - 1) >= 0)
                 {
@@ -566,7 +566,7 @@ public class SplineEditor : Editor
             }
             else
             {
-                segmentsComp[i] = new Segment(tmpArray[indexTmp]);
+                segmentsComp[i] = new Spline.Segment(tmpArray[indexTmp]);
             }
             indexTmp++;
         }
