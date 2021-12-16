@@ -35,11 +35,10 @@ public class Movable3DObjectEditor : SplineEditor
 
     public override void OnInspectorGUI()
     {
-        base.OnInspectorGUI(component.transform);
-
         EditorGUI.BeginChangeCheck();
         serializedObject.Update();
 
+        base.OnInspectorGUI(component.transform);
 
         DisplayOptions();
 
@@ -48,12 +47,13 @@ public class Movable3DObjectEditor : SplineEditor
 
         if (EditorGUI.EndChangeCheck() && !Application.isPlaying)
         {
-            CurrentDist.floatValue = component.GetCurrentDistance(startingPos.floatValue);
+            currentDist.floatValue = component.GetCurrentDistance(startingPos.floatValue);
 
             if (isChangingDirection.boolValue)
             {
                 component.transform.forward = component.CurrentDir;
             }
+            Undo.RecordObject(target, "Changed Properties");
         }
     }
 
@@ -63,8 +63,8 @@ public class Movable3DObjectEditor : SplineEditor
 
         if (EditorGUI.EndChangeCheck() && !Application.isPlaying)
         {
-            CurrentDist.floatValue = component.GetCurrentDistance(startingPos.floatValue);
-            Undo.RecordObject(target, "Changed Look Target");
+            currentDist.floatValue = component.GetCurrentDistance(startingPos.floatValue);
+            Undo.RecordObject(target, "Changed Properties");
         }
     }
 
@@ -127,7 +127,7 @@ public class Movable3DObjectEditor : SplineEditor
 
         GUILayout.EndVertical();
         GUILayout.EndHorizontal();
-        
+
         GUILayout.EndVertical();
         GUILayout.EndHorizontal();
     }

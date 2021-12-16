@@ -25,10 +25,10 @@ public class Spawnable3DObjectEditor : SplineEditor
 
     public override void OnInspectorGUI()
     {
-        base.OnInspectorGUI(component.transform);
-
         EditorGUI.BeginChangeCheck();
         serializedObject.Update();
+
+        base.OnInspectorGUI(component.transform);
 
         DisplayOptions();
 
@@ -40,6 +40,7 @@ public class Spawnable3DObjectEditor : SplineEditor
             {
                 component.GenerateObjects();
             }
+            Undo.RecordObject(target, "Changed Properties");
         }
     }
 
@@ -53,7 +54,7 @@ public class Spawnable3DObjectEditor : SplineEditor
             {
                 component.GenerateObjects();
             }
-            Undo.RecordObject(target, "Changed Look Target");
+            Undo.RecordObject(target, "Changed Properties");
         }
     }
 

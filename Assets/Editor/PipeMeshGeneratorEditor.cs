@@ -10,7 +10,8 @@ public class PipeMeshGeneratorEditor : SplineEditor
     PipeMeshGenerator component = null;
     private SerializedProperty nbQuad;
     private SerializedProperty width;
-    private SerializedProperty material;
+    private SerializedProperty materials;
+    private SerializedProperty catmullRollStep;
     private SerializedProperty autoGenerate;
 
     void OnAwake()
@@ -26,10 +27,10 @@ public class PipeMeshGeneratorEditor : SplineEditor
 
     public override void OnInspectorGUI()
     {
-        base.OnInspectorGUI(component.transform);
-
         EditorGUI.BeginChangeCheck();
         serializedObject.Update();
+
+        base.OnInspectorGUI(component.transform);
 
         DisplayOptions();
 
@@ -39,7 +40,16 @@ public class PipeMeshGeneratorEditor : SplineEditor
         {
             if (autoGenerate.boolValue)
             {
-                component.Generate();
+                if (!useCatmullRom.boolValue)
+                {
+                    component.Generate(component.segments);
+                }
+                else
+                {
+                    component.Generate();
+                }
+
+                Undo.RecordObject(target, "Changed Properties");
             }
         }
     }
@@ -52,9 +62,16 @@ public class PipeMeshGeneratorEditor : SplineEditor
         {
             if (autoGenerate.boolValue)
             {
-                component.Generate();
+                if (!useCatmullRom.boolValue)
+                {
+                    component.Generate(component.segments);
+                }
+                else
+                {
+                    component.Generate();
+                }
             }
-            Undo.RecordObject(target, "Changed Look Target");
+            Undo.RecordObject(target, "Changed Properties");
         }
     }
 
@@ -64,17 +81,43 @@ public class PipeMeshGeneratorEditor : SplineEditor
         GUILayout.BeginVertical("GroupBox");
 
         EditorGUILayout.LabelField("Pipe", EditorStyles.boldLabel);
+
+        GUILayout.BeginHorizontal();
+        GUILayout.BeginVertical("GroupBox");
+
+        EditorGUILayout.LabelField("Geometry", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(nbQuad);
+        if (useCatmullRom.boolValue)
+            EditorGUILayout.PropertyField(catmullRollStep);
         EditorGUILayout.PropertyField(width);
-        EditorGUILayout.PropertyField(material);
+
+
+        GUILayout.EndVertical();
+        GUILayout.EndHorizontal();
+
+        EditorGUILayout.PropertyField(materials);
+
+
 
         if (!autoGenerate.boolValue && GUILayout.Button("Generate"))
         {
-            component.Generate();
+            if (!useCatmullRom.boolValue)
+            {
+                component.Generate(component.segments);
+            }
+            else
+            {
+                component.Generate();
+            }
+        }
+
+        if (GUILayout.Button("Save Mesh"))
+        {
+            component.SaveMesh();
         }
 
         DisplayDebug();
-        
+
         GUILayout.EndVertical();
         GUILayout.EndHorizontal();
     }
@@ -98,8 +141,9 @@ public class PipeMeshGeneratorEditor : SplineEditor
 
         nbQuad = serializedObject.FindProperty("nbQuad");
         width = serializedObject.FindProperty("width");
-        material = serializedObject.FindProperty("material");
+        materials = serializedObject.FindProperty("materials");
 
+        catmullRollStep = serializedObject.FindProperty("catmullRollStep");
         autoGenerate = serializedObject.FindProperty("autoGenerate");
     }
 }

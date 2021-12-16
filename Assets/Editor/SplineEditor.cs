@@ -5,23 +5,22 @@ using UnityEngine;
 
 public class SplineEditor : Editor
 {
-    private SerializedProperty center;
-    private SerializedProperty demiCircle;
-    private SerializedProperty rotation;
-    private SerializedProperty currentDist;
-    private SerializedProperty radius;
-    private SerializedProperty segments;
+    protected SerializedProperty center;
+    protected SerializedProperty demiCircle;
+    protected SerializedProperty rotation;
+    protected SerializedProperty currentDist;
+    protected SerializedProperty radius;
+    protected SerializedProperty segments;
 
-    private SerializedProperty useCatmullRom;
-    private SerializedProperty close;
+    protected SerializedProperty useCatmullRom;
+    protected SerializedProperty close;
 
-    private SerializedProperty circleShape;
-    private bool oldClose;
-    private Event currentEvt = null;
-    private float radiusHandle = 0.25f;
-    private List<int> idPointSelects;
+    protected SerializedProperty circleShape;
+    protected bool oldClose;
+    protected Event currentEvt = null;
+    protected float radiusHandle = 0.25f;
+    protected List<int> idPointSelects;
 
-    public SerializedProperty CurrentDist { get => currentDist; set => currentDist = value; }
 
     //public Transform trComp = null;
     // public Segment[] segmentsComp = null;
@@ -32,10 +31,8 @@ public class SplineEditor : Editor
 
     public void OnInspectorGUI(Transform tr)
     {
-        EditorGUI.BeginChangeCheck();
-
         int oldSizeArray = segments.arraySize;
-        serializedObject.Update();
+       
         DisplaySplineOptions();
 
 
@@ -50,8 +47,6 @@ public class SplineEditor : Editor
                 p2.vector3Value = tr.position;
             }
         }
-
-        serializedObject.ApplyModifiedProperties();
     }
 
 
