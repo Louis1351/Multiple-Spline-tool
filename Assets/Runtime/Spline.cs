@@ -80,6 +80,10 @@ public class Spline : MonoBehaviour
     protected float currentDist = 0.0f;
     [SerializeField]
     protected bool circleShape = false;
+    [SerializeField]
+    protected float radiusHandle = 0.25f;
+    [SerializeField]
+    protected Color colorHandle = Color.white;
     protected Vector3 currentDir = Vector3.zero;
 
 #pragma warning restore 414

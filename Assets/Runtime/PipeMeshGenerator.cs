@@ -218,12 +218,12 @@ public class PipeMeshGenerator : Spline
             {
                 dir = (points[i] - points[0]);
                 if (close)
-                    rot = Quaternion.LookRotation(dir, Vector3.up);
+                    rot = Quaternion.LookRotation(dir, dir);
             }
             else
             {
                 dir = (points[i + 1] - points[i]);
-                rot = Quaternion.LookRotation(dir, Vector3.up);
+                rot = Quaternion.LookRotation(dir, dir);
             }
 
             float step = 0;

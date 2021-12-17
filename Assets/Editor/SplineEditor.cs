@@ -18,7 +18,8 @@ public class SplineEditor : Editor
     protected SerializedProperty circleShape;
     protected bool oldClose;
     protected Event currentEvt = null;
-    protected float radiusHandle = 0.25f;
+    protected SerializedProperty radiusHandle;
+    protected SerializedProperty colorHandle;
     protected List<int> idPointSelects;
 
 
@@ -32,7 +33,7 @@ public class SplineEditor : Editor
     public void OnInspectorGUI(Transform tr)
     {
         int oldSizeArray = segments.arraySize;
-       
+
         DisplaySplineOptions();
 
 
@@ -263,13 +264,13 @@ public class SplineEditor : Editor
         Transform parent = trComp.parent;
         Vector3 newPos = position;
         GUIStyle style = new GUIStyle();
-        style.normal.textColor = Color.white;
+        style.normal.textColor = colorHandle.colorValue;
         style.fontStyle = FontStyle.Bold;
         style.fontSize = 15;
         style.alignment = TextAnchor.MiddleCenter;
 
         if (currentEvt.modifiers != EventModifiers.Control &&
-        Handles.Button((parent) ? parent.transform.TransformPoint(position) : position, Quaternion.identity, radiusHandle, radiusHandle, Handles.SphereHandleCap))
+        Handles.Button((parent) ? parent.transform.TransformPoint(position) : position, Quaternion.identity, radiusHandle.floatValue, radiusHandle.floatValue, Handles.SphereHandleCap))
         {
             if ((circleShape.boolValue && id == -1) || !circleShape.boolValue)
             {
@@ -290,11 +291,12 @@ public class SplineEditor : Editor
         {
             if ((circleShape.boolValue && id == -1) || !circleShape.boolValue)
             {
-                Handles.SphereHandleCap(0, (parent) ? parent.TransformPoint(position) : position, Quaternion.identity, radiusHandle, EventType.Repaint);
+                Handles.color = colorHandle.colorValue;
+                Handles.SphereHandleCap(0, (parent) ? parent.TransformPoint(position) : position, Quaternion.identity, radiusHandle.floatValue, EventType.Repaint);
             }
         }
 
-        Handles.Label((parent) ? parent.TransformPoint(position) : position + Vector3.up * radiusHandle * 2.0f, name, style);
+        Handles.Label((parent) ? parent.TransformPoint(position) : position + Vector3.up * radiusHandle.floatValue * 2.0f, name, style);
 
         return newPos;
     }
@@ -314,6 +316,9 @@ public class SplineEditor : Editor
         useCatmullRom = serializedObject.FindProperty("useCatmullRom");
 
         close = serializedObject.FindProperty("close");
+
+        radiusHandle = serializedObject.FindProperty("radiusHandle");
+        colorHandle = serializedObject.FindProperty("colorHandle");
 
         if (idPointSelects == null)
         {
@@ -419,6 +424,8 @@ public class SplineEditor : Editor
         if (circleShape.boolValue)
             DisplayCircleOptions();
 
+        DisplayDebugOptions();
+
         GUILayout.EndVertical();
         GUILayout.EndHorizontal();
     }
@@ -450,6 +457,18 @@ public class SplineEditor : Editor
             oldClose = close.boolValue;
         }
 
+        GUILayout.EndVertical();
+        GUILayout.EndHorizontal();
+    }
+
+    private void DisplayDebugOptions()
+    {
+        GUILayout.BeginHorizontal();
+        GUILayout.BeginVertical("GroupBox");
+
+        EditorGUILayout.LabelField("Debug", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(radiusHandle);
+        EditorGUILayout.PropertyField(colorHandle);
         GUILayout.EndVertical();
         GUILayout.EndHorizontal();
     }
@@ -514,8 +533,8 @@ public class SplineEditor : Editor
         {
             for (int i = 0; i < segmentsComp.Length; ++i)
             {
-                if (Handles.Button(parent.TransformPoint(segmentsComp[i].p2), Quaternion.identity, radiusHandle, radiusHandle, Handles.SphereHandleCap)
-                    || Handles.Button(parent.TransformPoint(segmentsComp[i].p1), Quaternion.identity, radiusHandle, radiusHandle, Handles.SphereHandleCap))
+                if (Handles.Button(parent.TransformPoint(segmentsComp[i].p2), Quaternion.identity, radiusHandle.floatValue, radiusHandle.floatValue, Handles.SphereHandleCap)
+                    || Handles.Button(parent.TransformPoint(segmentsComp[i].p1), Quaternion.identity, radiusHandle.floatValue, radiusHandle.floatValue, Handles.SphereHandleCap))
                 {
                     RemovePoint(ref segmentsComp, i);
                     return true;
@@ -526,8 +545,8 @@ public class SplineEditor : Editor
         {
             for (int i = 0; i < segmentsComp.Length; ++i)
             {
-                if (Handles.Button(segmentsComp[i].p2, Quaternion.identity, radiusHandle, radiusHandle, Handles.SphereHandleCap)
-                    || Handles.Button(segmentsComp[i].p1, Quaternion.identity, radiusHandle, radiusHandle, Handles.SphereHandleCap))
+                if (Handles.Button(segmentsComp[i].p2, Quaternion.identity, radiusHandle.floatValue, radiusHandle.floatValue, Handles.SphereHandleCap)
+                    || Handles.Button(segmentsComp[i].p1, Quaternion.identity, radiusHandle.floatValue, radiusHandle.floatValue, Handles.SphereHandleCap))
                 {
                     RemovePoint(ref segmentsComp, i);
                     return true;
