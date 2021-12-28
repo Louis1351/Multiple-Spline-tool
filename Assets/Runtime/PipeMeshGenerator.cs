@@ -236,7 +236,7 @@ public class PipeMeshGenerator : Spline
         }
 
         vertices[nbVerticeID] = segments[0].p1;
-        vertices[nbVerticeID + 1] = segments[segments.Length - 1].p2;
+        vertices[nbVerticeID + 1] = points[points.Count - 1];
 
 
         ///Set triangles

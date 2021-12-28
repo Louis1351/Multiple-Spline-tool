@@ -93,6 +93,8 @@ public class Spline : MonoBehaviour
         float dist = Mathf.Clamp(_dist, 0.0f, segments[segments.Length - 1].p2length);
 
         Vector3 newPos = Vector3.zero;
+        Vector3 newDir = Vector3.zero;
+        float t = 0.0f;
         for (int i = 0; i < segments.Length; ++i)
         {
             if (dist >= segments[i].p1length && dist <= segments[i].p2length)
@@ -102,7 +104,7 @@ public class Spline : MonoBehaviour
                     continue;
                 }
 
-                float t = (dist - segments[i].p1length) / segments[i].length;
+                t = (dist - segments[i].p1length) / segments[i].length;
 
                 if (useCatmullRom)
                 {
@@ -141,9 +143,12 @@ public class Spline : MonoBehaviour
                            segments[segments.ClampListPos(i + 1)].p2);
                         }
                     }
-                    Vector3 newDir = (newPos - transform.position).normalized;
+
+                    newDir = (newPos - transform.position);
+
                     if (newDir != Vector3.zero)
                         currentDir = newDir;
+
                     return newPos;
                 }
                 else
@@ -166,5 +171,17 @@ public class Spline : MonoBehaviour
             return currentDist;
         }
         else return currentDist;
+    }
+
+    public float GetCurrentTime(float _distance)
+    {
+        float time = 0.0f;
+        if (segments != null && segments.Length > 0)
+        {
+            float totalLength = segments[segments.Length - 1].p2length;
+            time = _distance / totalLength;
+            return Mathf.Clamp(time, 0.0f, 1.0f);
+        }
+        else return time;
     }
 }

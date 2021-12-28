@@ -36,14 +36,18 @@ public class SplineEditor : Editor
 
         DisplaySplineOptions();
 
+        SerializedProperty item;
+        SerializedProperty p1;
+        SerializedProperty p2;
 
         if (oldSizeArray == 0 && segments.arraySize != oldSizeArray)
         {
             for (int i = 0; i < segments.arraySize; i++)
             {
-                SerializedProperty item = segments.GetArrayElementAtIndex(i);
-                SerializedProperty p1 = item.FindPropertyRelative("p1");
-                SerializedProperty p2 = item.FindPropertyRelative("p2");
+                item = segments.GetArrayElementAtIndex(i);
+                p1 = item.FindPropertyRelative("p1");
+                p2 = item.FindPropertyRelative("p2");
+
                 p1.vector3Value = tr.position;
                 p2.vector3Value = tr.position;
             }
@@ -68,14 +72,18 @@ public class SplineEditor : Editor
 
         if (!circleShape.boolValue)
         {
+            SerializedProperty item;
+            SerializedProperty p1;
+            SerializedProperty p2;
+
             for (int i = 0; i < segments.arraySize; ++i)
             {
                 if (close.boolValue && i == segments.arraySize - 1)
                     break;
 
-                SerializedProperty item = segments.GetArrayElementAtIndex(i);
-                SerializedProperty p1 = item.FindPropertyRelative("p1");
-                SerializedProperty p2 = item.FindPropertyRelative("p2");
+                item = segments.GetArrayElementAtIndex(i);
+                p1 = item.FindPropertyRelative("p1");
+                p2 = item.FindPropertyRelative("p2");
 
                 if (idPointSelects.Contains(-1) && i == 0)
                 {
