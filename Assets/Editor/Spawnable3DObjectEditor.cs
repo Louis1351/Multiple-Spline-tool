@@ -14,11 +14,14 @@ public class Spawnable3DObjectEditor : SplineEditor
     private SerializedProperty adaptToSurface;
     private SerializedProperty distanceDetection;
     private SerializedProperty layers;
+
     private SerializedProperty scaleType;
     private SerializedProperty scale;
     private SerializedProperty minScale;
     private SerializedProperty maxScale;
+    private SerializedProperty vector3Curve;
 
+    private SerializedProperty rotationType;
     void OnAwake()
     {
         Initialize();
@@ -143,6 +146,30 @@ public class Spawnable3DObjectEditor : SplineEditor
         EditorGUILayout.LabelField("Rotation", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(useDirection);
 
+        if (!useDirection.boolValue)
+        {
+            EditorGUILayout.PropertyField(rotationType);
+            switch ((Spawnable3DObject.RotationType)rotationType.enumValueIndex)
+            {
+                case Spawnable3DObject.RotationType.none:
+
+                    break;
+                case Spawnable3DObject.RotationType.linear:
+
+                    break;
+                case Spawnable3DObject.RotationType.randomByAxis:
+
+                    break;
+                case Spawnable3DObject.RotationType.randomBetweenTwoConstant:
+
+                    break;
+                case Spawnable3DObject.RotationType.curved:
+
+                    break;
+
+            }
+        }
+
         GUILayout.EndVertical();
         GUILayout.EndHorizontal();
     }
@@ -164,11 +191,16 @@ public class Spawnable3DObjectEditor : SplineEditor
                 EditorGUILayout.PropertyField(minScale);
                 EditorGUILayout.PropertyField(maxScale);
                 break;
-            case Spawnable3DObject.ScaleType.random:
+            case Spawnable3DObject.ScaleType.randomByAxis:
+                EditorGUILayout.PropertyField(minScale);
+                EditorGUILayout.PropertyField(maxScale);
+                break;
+            case Spawnable3DObject.ScaleType.randomBetweenTwoConstant:
                 EditorGUILayout.PropertyField(minScale);
                 EditorGUILayout.PropertyField(maxScale);
                 break;
             case Spawnable3DObject.ScaleType.curved:
+                EditorGUILayout.PropertyField(vector3Curve);
                 break;
 
         }
@@ -220,6 +252,9 @@ public class Spawnable3DObjectEditor : SplineEditor
         scale = serializedObject.FindProperty("scale");
         minScale = serializedObject.FindProperty("minScale");
         maxScale = serializedObject.FindProperty("maxScale");
+        vector3Curve = serializedObject.FindProperty("vector3Curve");
+
+        rotationType = serializedObject.FindProperty("rotationType");
 
         autoGenerate = serializedObject.FindProperty("autoGenerate");
     }

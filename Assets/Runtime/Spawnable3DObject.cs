@@ -12,7 +12,18 @@ public class Spawnable3DObject : Spline
         none,
         linear,
         curved,
-        random
+        randomBetweenTwoConstant,
+        randomByAxis
+    }
+
+    [System.Serializable]
+    public enum RotationType
+    {
+        none,
+        linear,
+        curved,
+        randomBetweenTwoConstant,
+        randomByAxis
     }
 
     [SerializeField]
@@ -30,8 +41,21 @@ public class Spawnable3DObject : Spline
     private Vector3 minScale = Vector3.one;
     [SerializeField]
     private Vector3 maxScale = Vector3.one;
+    [SerializeField]
+    private Vector3Curve vector3Curve;
 
 #pragma warning disable 414
+    [SerializeField]
+    private RotationType rotationType = RotationType.none;
+    [SerializeField]
+    private Quaternion currentRotation = Quaternion.identity;
+    [SerializeField]
+    private Quaternion minRotation = Quaternion.identity;
+    [SerializeField]
+    private Quaternion maxRotation = Quaternion.identity;
+    [SerializeField]
+    private Vector3Curve rotation3Curve;
+
     [SerializeField]
     private bool adaptToSurface = false;
     [SerializeField]
@@ -53,6 +77,7 @@ public class Spawnable3DObject : Spline
     public void GenerateObjects()
     {
         GameObject go = null;
+        Vector3 newScale = Vector3.zero;
         Vector3 dir = Vector3.zero;
         float t = 0.0f;
         int index = 0;
@@ -84,12 +109,26 @@ public class Spawnable3DObject : Spline
                 case Spawnable3DObject.ScaleType.linear:
                     go.transform.localScale = Vector3.Lerp(minScale, maxScale, GetCurrentTime(t));
                     break;
-                case Spawnable3DObject.ScaleType.random:
-                    // go.transform.localScale = Random.Range();
+                case Spawnable3DObject.ScaleType.randomBetweenTwoConstant:
+                    float l = Random.Range(0f, 1f);
+                    go.transform.localScale = Vector3.Lerp(minScale, maxScale, l);
+                    break;
+                case Spawnable3DObject.ScaleType.randomByAxis:
+                    newScale.x = Mathf.Lerp(minScale.x, maxScale.x, Random.Range(0f, 1f));
+                    newScale.y = Mathf.Lerp(minScale.y, maxScale.y, Random.Range(0f, 1f));
+                    newScale.z = Mathf.Lerp(minScale.z, maxScale.z, Random.Range(0f, 1f));
+
+                    go.transform.localScale = newScale;
                     break;
                 case Spawnable3DObject.ScaleType.curved:
-                    break;
+                    float currentT = GetCurrentTime(t);
+                    newScale.x = vector3Curve.curveX.Evaluate(currentT);
+                    newScale.y = vector3Curve.curveY.Evaluate(currentT);
+                    newScale.z = vector3Curve.curveZ.Evaluate(currentT);
 
+                    go.transform.localScale = newScale;
+
+                    break;
             }
 
             if (adaptToSurface)
