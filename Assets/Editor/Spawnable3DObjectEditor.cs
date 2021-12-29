@@ -15,13 +15,21 @@ public class Spawnable3DObjectEditor : SplineEditor
     private SerializedProperty distanceDetection;
     private SerializedProperty layers;
 
+    private SerializedProperty randomOrder;
+    private SerializedProperty randomOffset;
+    private SerializedProperty distanceOffset;
+
     private SerializedProperty scaleType;
-    private SerializedProperty scale;
+    private SerializedProperty currentScale;
     private SerializedProperty minScale;
     private SerializedProperty maxScale;
-    private SerializedProperty vector3Curve;
+    private SerializedProperty curvedScale;
 
     private SerializedProperty rotationType;
+    private SerializedProperty currentRotation;
+    private SerializedProperty minRotation;
+    private SerializedProperty maxRotation;
+    private SerializedProperty curvedRotation;
     void OnAwake()
     {
         Initialize();
@@ -78,8 +86,8 @@ public class Spawnable3DObjectEditor : SplineEditor
 
         EditorGUILayout.LabelField("Spawn Options", EditorStyles.boldLabel);
 
-        EditorGUILayout.PropertyField(spawnableObjects);
 
+        DisplayObjects();
         DisplayTransform();
 
         GUILayout.EndVertical();
@@ -125,6 +133,18 @@ public class Spawnable3DObjectEditor : SplineEditor
         GUILayout.EndVertical();
         GUILayout.EndHorizontal();
     }
+    private void DisplayObjects()
+    {
+        GUILayout.BeginHorizontal();
+        GUILayout.BeginVertical("GroupBox");
+
+        EditorGUILayout.LabelField("Objects", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(randomOrder);
+        EditorGUILayout.PropertyField(spawnableObjects);
+
+        GUILayout.EndVertical();
+        GUILayout.EndHorizontal();
+    }
 
     private void DisplayPosition()
     {
@@ -133,6 +153,12 @@ public class Spawnable3DObjectEditor : SplineEditor
 
         EditorGUILayout.LabelField("Position", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(step);
+
+        EditorGUILayout.PropertyField(randomOffset);
+        if (randomOffset.boolValue)
+        {
+            EditorGUILayout.PropertyField(distanceOffset);
+        }
 
         GUILayout.EndVertical();
         GUILayout.EndHorizontal();
@@ -146,28 +172,29 @@ public class Spawnable3DObjectEditor : SplineEditor
         EditorGUILayout.LabelField("Rotation", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(useDirection);
 
-        if (!useDirection.boolValue)
+        EditorGUILayout.PropertyField(rotationType);
+        
+        switch ((Spawnable3DObject.RotationType)rotationType.enumValueIndex)
         {
-            EditorGUILayout.PropertyField(rotationType);
-            switch ((Spawnable3DObject.RotationType)rotationType.enumValueIndex)
-            {
-                case Spawnable3DObject.RotationType.none:
+            case Spawnable3DObject.RotationType.none:
+                EditorGUILayout.PropertyField(currentRotation);
+                break;
+            case Spawnable3DObject.RotationType.linear:
+                EditorGUILayout.PropertyField(minRotation);
+                EditorGUILayout.PropertyField(maxRotation);
+                break;
+            case Spawnable3DObject.RotationType.randomByAxis:
+                EditorGUILayout.PropertyField(minRotation);
+                EditorGUILayout.PropertyField(maxRotation);
+                break;
+            case Spawnable3DObject.RotationType.randomBetweenTwoConstant:
+                EditorGUILayout.PropertyField(minRotation);
+                EditorGUILayout.PropertyField(maxRotation);
+                break;
+            case Spawnable3DObject.RotationType.curved:
+                EditorGUILayout.PropertyField(curvedRotation);
+                break;
 
-                    break;
-                case Spawnable3DObject.RotationType.linear:
-
-                    break;
-                case Spawnable3DObject.RotationType.randomByAxis:
-
-                    break;
-                case Spawnable3DObject.RotationType.randomBetweenTwoConstant:
-
-                    break;
-                case Spawnable3DObject.RotationType.curved:
-
-                    break;
-
-            }
         }
 
         GUILayout.EndVertical();
@@ -185,7 +212,7 @@ public class Spawnable3DObjectEditor : SplineEditor
         switch ((Spawnable3DObject.ScaleType)scaleType.enumValueIndex)
         {
             case Spawnable3DObject.ScaleType.none:
-                EditorGUILayout.PropertyField(scale);
+                EditorGUILayout.PropertyField(currentScale);
                 break;
             case Spawnable3DObject.ScaleType.linear:
                 EditorGUILayout.PropertyField(minScale);
@@ -200,9 +227,8 @@ public class Spawnable3DObjectEditor : SplineEditor
                 EditorGUILayout.PropertyField(maxScale);
                 break;
             case Spawnable3DObject.ScaleType.curved:
-                EditorGUILayout.PropertyField(vector3Curve);
+                EditorGUILayout.PropertyField(curvedScale);
                 break;
-
         }
 
         GUILayout.EndVertical();
@@ -231,6 +257,7 @@ public class Spawnable3DObjectEditor : SplineEditor
             item = segments.GetArrayElementAtIndex(i);
             p1 = item.FindPropertyRelative("p1");
             Vector3 fwd = p1.vector3Value - Camera.current.transform.position;
+            Handles.color = new Color(Handles.color.r, Handles.color.g, Handles.color.b, 0.3f);
             Handles.CircleHandleCap(0, p1.vector3Value, Quaternion.LookRotation(fwd, Vector3.up), distanceDetection.floatValue, EventType.Repaint);
         }
     }
@@ -248,13 +275,21 @@ public class Spawnable3DObjectEditor : SplineEditor
         distanceDetection = serializedObject.FindProperty("distanceDetection");
         layers = serializedObject.FindProperty("layers");
 
+        randomOrder = serializedObject.FindProperty("randomOrder");
+        randomOffset = serializedObject.FindProperty("randomOffset");
+        distanceOffset = serializedObject.FindProperty("distanceOffset");
+
         scaleType = serializedObject.FindProperty("scaleType");
-        scale = serializedObject.FindProperty("scale");
+        currentScale = serializedObject.FindProperty("currentScale");
         minScale = serializedObject.FindProperty("minScale");
         maxScale = serializedObject.FindProperty("maxScale");
-        vector3Curve = serializedObject.FindProperty("vector3Curve");
+        curvedScale = serializedObject.FindProperty("curvedScale");
 
         rotationType = serializedObject.FindProperty("rotationType");
+        currentRotation = serializedObject.FindProperty("currentRotation");
+        minRotation = serializedObject.FindProperty("minRotation");
+        maxRotation = serializedObject.FindProperty("maxRotation");
+        curvedRotation = serializedObject.FindProperty("curvedRotation");
 
         autoGenerate = serializedObject.FindProperty("autoGenerate");
     }

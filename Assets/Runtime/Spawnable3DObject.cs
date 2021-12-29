@@ -31,30 +31,38 @@ public class Spawnable3DObject : Spline
     [SerializeField]
     private float step = 0.5f;
     [SerializeField]
+    private bool randomOrder = false;
+    [SerializeField]
+    private bool randomOffset = false;
+    [SerializeField]
+    private float distanceOffset = 0.0f;
+    [SerializeField]
     private bool useDirection = false;
 
     [SerializeField]
     private ScaleType scaleType = ScaleType.none;
     [SerializeField]
-    private Vector3 scale = Vector3.one;
+    private Vector3 currentScale = Vector3.one;
     [SerializeField]
     private Vector3 minScale = Vector3.one;
     [SerializeField]
     private Vector3 maxScale = Vector3.one;
+    [Curve3D(1)]
     [SerializeField]
-    private Vector3Curve vector3Curve;
+    private Vector3Curve curvedScale;
 
 #pragma warning disable 414
     [SerializeField]
     private RotationType rotationType = RotationType.none;
     [SerializeField]
-    private Quaternion currentRotation = Quaternion.identity;
+    private Vector3 currentRotation = Vector3.zero;
     [SerializeField]
-    private Quaternion minRotation = Quaternion.identity;
+    private Vector3 minRotation = Vector3.zero;
     [SerializeField]
-    private Quaternion maxRotation = Quaternion.identity;
+    private Vector3 maxRotation = Vector3.zero;
+    [Curve3D(1)]
     [SerializeField]
-    private Vector3Curve rotation3Curve;
+    private Vector3Curve curvedRotation;
 
     [SerializeField]
     private bool adaptToSurface = false;
@@ -78,7 +86,9 @@ public class Spawnable3DObject : Spline
     {
         GameObject go = null;
         Vector3 newScale = Vector3.zero;
+        Vector3 newRotation = Vector3.zero;
         Vector3 dir = Vector3.zero;
+        Vector3 randomOffsetVec = Vector3.zero;
         float t = 0.0f;
         int index = 0;
 
@@ -86,13 +96,76 @@ public class Spawnable3DObject : Spline
 
         do
         {
-            go = PrefabUtility.InstantiatePrefab(spawnableObjects[index]) as GameObject;
-            go.transform.localPosition = GetPosition(t);
+            if (randomOffset)
+                randomOffsetVec = Random.onUnitSphere * distanceOffset;
+
+            go = PrefabUtility.InstantiatePrefab(spawnableObjects[((randomOrder) ? Random.Range(0, spawnableObjects.Length) : index)]) as GameObject;
+            go.transform.localPosition = GetPosition(t) + randomOffsetVec;
+
+            dir = go.transform.position - GetPosition(t + 0.01f);
 
             if (useDirection)
             {
-                dir = go.transform.position - GetPosition(t + 0.01f);
                 go.transform.forward = dir;
+                switch (rotationType)
+                {
+                    case Spawnable3DObject.RotationType.none:
+                        go.transform.localRotation *= Quaternion.Euler(currentRotation);
+                        break;
+                    case Spawnable3DObject.RotationType.linear:
+                        go.transform.localRotation *= Quaternion.Euler(Vector3.Lerp(minRotation, maxRotation, GetCurrentTime(t)));
+                        break;
+                    case Spawnable3DObject.RotationType.randomBetweenTwoConstant:
+                        float l = Random.Range(0f, 1f);
+                        go.transform.localRotation *= Quaternion.Euler(Vector3.Lerp(minRotation, maxRotation, l));
+                        break;
+                    case Spawnable3DObject.RotationType.randomByAxis:
+                        newRotation.x = Mathf.Lerp(minRotation.x, maxRotation.x, Random.Range(0f, 1f));
+                        newRotation.y = Mathf.Lerp(minRotation.y, maxRotation.y, Random.Range(0f, 1f));
+                        newRotation.z = Mathf.Lerp(minRotation.z, maxRotation.z, Random.Range(0f, 1f));
+
+                        go.transform.localRotation *= Quaternion.Euler(newRotation);
+                        break;
+                    case Spawnable3DObject.RotationType.curved:
+                        float currentT = GetCurrentTime(t);
+                        newRotation.x = curvedRotation.curveX.Evaluate(currentT);
+                        newRotation.y = curvedRotation.curveY.Evaluate(currentT);
+                        newRotation.z = curvedRotation.curveZ.Evaluate(currentT);
+
+                        go.transform.localRotation *= Quaternion.Euler(newRotation);
+                        break;
+                }
+            }
+            else
+            {
+                switch (rotationType)
+                {
+                    case Spawnable3DObject.RotationType.none:
+                        go.transform.localRotation = Quaternion.Euler(currentRotation);
+                        break;
+                    case Spawnable3DObject.RotationType.linear:
+                        go.transform.localRotation = Quaternion.Euler(Vector3.Lerp(minRotation, maxRotation, GetCurrentTime(t)));
+                        break;
+                    case Spawnable3DObject.RotationType.randomBetweenTwoConstant:
+                        float l = Random.Range(0f, 1f);
+                        go.transform.localRotation = Quaternion.Euler(Vector3.Lerp(minRotation, maxRotation, l));
+                        break;
+                    case Spawnable3DObject.RotationType.randomByAxis:
+                        newRotation.x = Mathf.Lerp(minRotation.x, maxRotation.x, Random.Range(0f, 1f));
+                        newRotation.y = Mathf.Lerp(minRotation.y, maxRotation.y, Random.Range(0f, 1f));
+                        newRotation.z = Mathf.Lerp(minRotation.z, maxRotation.z, Random.Range(0f, 1f));
+
+                        go.transform.localRotation = Quaternion.Euler(newRotation);
+                        break;
+                    case Spawnable3DObject.RotationType.curved:
+                        float currentT = GetCurrentTime(t);
+                        newRotation.x = curvedRotation.curveX.Evaluate(currentT);
+                        newRotation.y = curvedRotation.curveY.Evaluate(currentT);
+                        newRotation.z = curvedRotation.curveZ.Evaluate(currentT);
+
+                        go.transform.localRotation = Quaternion.Euler(newRotation);
+                        break;
+                }
             }
 
             index++;
@@ -104,7 +177,7 @@ public class Spawnable3DObject : Spline
             switch (scaleType)
             {
                 case Spawnable3DObject.ScaleType.none:
-                    go.transform.localScale = scale;
+                    go.transform.localScale = currentScale;
                     break;
                 case Spawnable3DObject.ScaleType.linear:
                     go.transform.localScale = Vector3.Lerp(minScale, maxScale, GetCurrentTime(t));
@@ -122,9 +195,9 @@ public class Spawnable3DObject : Spline
                     break;
                 case Spawnable3DObject.ScaleType.curved:
                     float currentT = GetCurrentTime(t);
-                    newScale.x = vector3Curve.curveX.Evaluate(currentT);
-                    newScale.y = vector3Curve.curveY.Evaluate(currentT);
-                    newScale.z = vector3Curve.curveZ.Evaluate(currentT);
+                    newScale.x = curvedScale.curveX.Evaluate(currentT);
+                    newScale.y = curvedScale.curveY.Evaluate(currentT);
+                    newScale.z = curvedScale.curveZ.Evaluate(currentT);
 
                     go.transform.localScale = newScale;
 
