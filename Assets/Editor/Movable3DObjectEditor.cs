@@ -6,7 +6,7 @@ using UnityEngine;
 [CustomEditor(typeof(Movable3DObject))]
 public class Movable3DObjectEditor : SplineEditor
 {
-    private Movable3DObject component;
+    private new Movable3DObject component;
     private SerializedProperty type;
     private SerializedProperty isMovingOnStart;
     private SerializedProperty isChangingDirection;
@@ -38,7 +38,7 @@ public class Movable3DObjectEditor : SplineEditor
         EditorGUI.BeginChangeCheck();
         serializedObject.Update();
 
-        base.OnInspectorGUI(component.transform);
+        base.OnInspectorGUI();
 
         DisplayOptions();
 
@@ -57,9 +57,9 @@ public class Movable3DObjectEditor : SplineEditor
         }
     }
 
-    private void OnSceneGUI()
+    public override void OnSceneGUI()
     {
-        base.OnSceneGUI(component.transform, ref component.segments, ref component.center);
+        base.OnSceneGUI();
 
         if (EditorGUI.EndChangeCheck() && !Application.isPlaying)
         {

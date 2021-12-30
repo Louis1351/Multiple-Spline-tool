@@ -7,7 +7,7 @@ using UnityEngine;
 [CustomEditor(typeof(PipeMeshGenerator))]
 public class PipeMeshGeneratorEditor : SplineEditor
 {
-    PipeMeshGenerator component = null;
+    private new PipeMeshGenerator component = null;
     private SerializedProperty nbQuad;
     private SerializedProperty width;
     private SerializedProperty materials;
@@ -30,7 +30,7 @@ public class PipeMeshGeneratorEditor : SplineEditor
         EditorGUI.BeginChangeCheck();
         serializedObject.Update();
 
-        base.OnInspectorGUI(component.transform);
+        base.OnInspectorGUI();
 
         DisplayOptions();
 
@@ -54,9 +54,9 @@ public class PipeMeshGeneratorEditor : SplineEditor
         }
     }
 
-    private void OnSceneGUI()
+    public override void OnSceneGUI()
     {
-        base.OnSceneGUI(component.transform, ref component.segments, ref component.center);
+        base.OnSceneGUI();
 
         if (EditorGUI.EndChangeCheck() && !Application.isPlaying)
         {

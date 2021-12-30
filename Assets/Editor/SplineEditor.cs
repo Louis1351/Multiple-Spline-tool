@@ -18,19 +18,19 @@ public class SplineEditor : Editor
     protected SerializedProperty circleShape;
     protected bool oldClose;
     protected Event currentEvt = null;
+
     protected SerializedProperty radiusHandle;
     protected SerializedProperty colorHandle;
     protected List<int> idPointSelects;
 
+    protected Spline component;
 
-    //public Transform trComp = null;
-    // public Segment[] segmentsComp = null;
     public virtual void OnEnable()
     {
         oldClose = close.boolValue;
     }
 
-    public void OnInspectorGUI(Transform tr)
+    public override void OnInspectorGUI()
     {
         int oldSizeArray = segments.arraySize;
 
@@ -48,8 +48,8 @@ public class SplineEditor : Editor
                 p1 = item.FindPropertyRelative("p1");
                 p2 = item.FindPropertyRelative("p2");
 
-                p1.vector3Value = tr.position;
-                p2.vector3Value = tr.position;
+                p1.vector3Value = component.transform.position;
+                p2.vector3Value = component.transform.position;
             }
         }
     }
@@ -105,15 +105,17 @@ public class SplineEditor : Editor
         //}
     }
 
-    public void OnSceneGUI(Transform trComp, ref Spline.Segment[] segmentsComp, ref Vector3 center)
+    public virtual void OnSceneGUI()
     {
-        EditorGUI.BeginChangeCheck();
-
         currentEvt = Event.current;
 
         // You'll need a control id to avoid messing with other tools!
-        var controlID = GUIUtility.GetControlID(FocusType.Passive);
-        var eventType = currentEvt.GetTypeForControl(controlID);
+        int controlID = GUIUtility.GetControlID(FocusType.Passive);
+
+        EditorGUI.BeginChangeCheck();
+
+        HandleSceneDrag();
+
 
         if (segments.arraySize > 0)
             Tools.current = Tool.None;
@@ -122,52 +124,57 @@ public class SplineEditor : Editor
 
         if (useCatmullRom.boolValue)
         {
-            DisplayCatmullRomSpline(trComp, ref segmentsComp);
+            DisplayCatmullRomSpline();
         }
 
         if (!circleShape.boolValue)
         {
-            SetFreeSegments(trComp, ref segmentsComp);
+            SetFreeSegments();
         }
         else
         {
-            SetCircleSegments(trComp, ref segmentsComp, ref center, radius.floatValue);
+            SetCircleSegments(radius.floatValue);
         }
 
         if (currentEvt.control && currentEvt.button == 0)
         {
-            if (!RemovePoint(trComp, ref segmentsComp))
+            if (!RemovePoint())
             {
                 if (currentEvt.type == EventType.MouseDown)
-                    AddPoint(trComp, ref segmentsComp);
+                {
+                    AddPoint(); 
+                    currentEvt.Use();
+                }
             }
         }
+
+        EditorGUI.EndChangeCheck();
     }
 
-    private void SetFreeSegments(Transform trComp, ref Spline.Segment[] segmentsComp)
+    private void SetFreeSegments()
     {
-        Transform parent = trComp.parent;
+        Transform parent = component.transform.parent;
         Vector3 firstP = Vector3.zero;
         Vector3 LastP = Vector3.zero;
         Vector3 newP1 = Vector3.zero;
         Vector3 newP2 = Vector3.zero;
 
         float dist = 0.0f;
-        for (int i = 0; i < segmentsComp.Length; ++i)
+        for (int i = 0; i < component.segments.Length; ++i)
         {
 
             if (i == 0)
             {
-                newP1 = DrawHandle(trComp, -1, i.ToString(), segmentsComp[i].p1, Quaternion.identity);
+                newP1 = DrawHandle(-1, i.ToString(), component.segments[i].p1, Quaternion.identity);
 
-                segmentsComp[i].p1 = newP1;
+                component.segments[i].p1 = newP1;
                 firstP = newP1;
             }
             else
             {
                 newP1 = LastP;
-                if (i >= segmentsComp.Length) break;
-                segmentsComp[i].p1 = newP1;
+                if (i >= component.segments.Length) break;
+                component.segments[i].p1 = newP1;
             }
 
             if (close.boolValue && i == segments.arraySize - 1)
@@ -176,20 +183,20 @@ public class SplineEditor : Editor
             }
             else
             {
-                newP2 = DrawHandle(trComp, i, (i + 1).ToString(), segmentsComp[i].p2, Quaternion.identity);
+                newP2 = DrawHandle(i, (i + 1).ToString(), component.segments[i].p2, Quaternion.identity);
             }
 
-            segmentsComp[i].p2 = newP2;
+            component.segments[i].p2 = newP2;
 
-            segmentsComp[i].p1length = dist;
+            component.segments[i].p1length = dist;
 
-            segmentsComp[i].length = (newP2 - newP1).magnitude;
+            component.segments[i].length = (newP2 - newP1).magnitude;
 
-            dist += segmentsComp[i].length;
+            dist += component.segments[i].length;
 
-            segmentsComp[i].p2length = dist;
+            component.segments[i].p2length = dist;
 
-            segmentsComp[i].dir = (newP2 - newP1).normalized;
+            component.segments[i].dir = (newP2 - newP1).normalized;
 
             if (parent)
             {
@@ -201,9 +208,9 @@ public class SplineEditor : Editor
         }
     }
 
-    private void SetCircleSegments(Transform trComp, ref Spline.Segment[] segmentsComp, ref Vector3 center, float _radius)
+    private void SetCircleSegments(float _radius)
     {
-        Transform parent = trComp.parent;
+        Transform parent = component.transform.parent;
         Vector3 firstP = Vector3.zero;
         Vector3 LastP = Vector3.zero;
         Vector3 newP1 = Vector3.zero;
@@ -215,25 +222,25 @@ public class SplineEditor : Editor
 
         Quaternion eulerRot = Quaternion.Euler(rotation.vector3Value.x, rotation.vector3Value.y, rotation.vector3Value.z);
 
-        newCenter = DrawHandle(trComp, -1, "center", center, Quaternion.identity);//Handles.PositionHandle(component.Center, Quaternion.identity);
-        center = newCenter;
+        newCenter = DrawHandle(-1, "center", component.center, Quaternion.identity);//Handles.PositionHandle(component.Center, Quaternion.identity);
+        component.center = newCenter;
 
         float dist = 0.0f;
 
-        for (int i = 0; i < segmentsComp.Length; ++i)
+        for (int i = 0; i < component.segments.Length; ++i)
         {
             if (i == 0)
             {
-                newP1 = DrawHandle(trComp, i, i.ToString(), newCenter + eulerRot * new Vector3(Mathf.Cos(DivPI2 * i), Mathf.Sin(DivPI2 * i)) * _radius, Quaternion.identity);
+                newP1 = DrawHandle(i, i.ToString(), newCenter + eulerRot * new Vector3(Mathf.Cos(DivPI2 * i), Mathf.Sin(DivPI2 * i)) * _radius, Quaternion.identity);
 
-                segmentsComp[i].p1 = newP1;
+                component.segments[i].p1 = newP1;
                 firstP = newP1;
             }
             else
             {
                 newP1 = LastP;
-                if (i >= segmentsComp.Length) break;
-                segmentsComp[i].p1 = newP1;
+                if (i >= component.segments.Length) break;
+                component.segments[i].p1 = newP1;
             }
 
             if (close.boolValue && i == segments.arraySize - 1)
@@ -242,20 +249,20 @@ public class SplineEditor : Editor
             }
             else
             {
-                newP2 = DrawHandle(trComp, i, (i + 1).ToString(), newCenter + eulerRot * new Vector3(Mathf.Cos(DivPI2 * (i + 1)), Mathf.Sin(DivPI2 * (i + 1))) * _radius, Quaternion.identity);
+                newP2 = DrawHandle(i, (i + 1).ToString(), newCenter + eulerRot * new Vector3(Mathf.Cos(DivPI2 * (i + 1)), Mathf.Sin(DivPI2 * (i + 1))) * _radius, Quaternion.identity);
             }
 
-            segmentsComp[i].p1length = dist;
+            component.segments[i].p1length = dist;
 
-            segmentsComp[i].length = (newP2 - newP1).magnitude;
+            component.segments[i].length = (newP2 - newP1).magnitude;
 
-            segmentsComp[i].p2 = newP2;
+            component.segments[i].p2 = newP2;
 
-            dist += segmentsComp[i].length;
+            dist += component.segments[i].length;
 
-            segmentsComp[i].p2length = dist;
+            component.segments[i].p2length = dist;
 
-            segmentsComp[i].dir = (newP2 - newP1).normalized;
+            component.segments[i].dir = (newP2 - newP1).normalized;
             if (parent)
             {
                 Handles.DrawDottedLine(parent.TransformPoint(newP1), parent.TransformPoint(newP2), 5.0f);
@@ -267,9 +274,9 @@ public class SplineEditor : Editor
         }
     }
 
-    private Vector3 DrawHandle(Transform trComp, int id, string name, Vector3 position, Quaternion rotation)
+    private Vector3 DrawHandle(int id, string name, Vector3 position, Quaternion rotation)
     {
-        Transform parent = trComp.parent;
+        Transform parent = component.transform.parent;
         Vector3 newPos = position;
         GUIStyle style = new GUIStyle();
         style.normal.textColor = colorHandle.colorValue;
@@ -284,6 +291,7 @@ public class SplineEditor : Editor
             {
                 SelectPoint(id);
             }
+            currentEvt.Use();
         }
 
         if (idPointSelects.Contains(id))
@@ -311,6 +319,8 @@ public class SplineEditor : Editor
 
     public virtual void Initialize()
     {
+        component = target as Spline;
+
         currentDist = serializedObject.FindProperty("currentDist");
 
         circleShape = serializedObject.FindProperty("circleShape");
@@ -338,20 +348,20 @@ public class SplineEditor : Editor
         }
     }
 
-    private void DisplayCatmullRomSpline(Transform trComp, ref Spline.Segment[] segmentsComp)
+    private void DisplayCatmullRomSpline()
     {
         //Draw the Catmull-Rom spline between the points
-        for (int i = 0; i < segmentsComp.Length; ++i)
+        for (int i = 0; i < component.segments.Length; ++i)
         {
-            DisplayCatmullRomSpline(trComp, ref segmentsComp, i);
+            DisplayCatmullRomSpline(i);
         }
     }
 
-    private void DisplayCatmullRomSpline(Transform trComp, ref Spline.Segment[] segmentsComp, int pos)
+    private void DisplayCatmullRomSpline(int pos)
     {
-        Transform parent = trComp.parent;
+        Transform parent = component.transform.parent;
         //The start position of the line
-        Vector3 lastPos = segmentsComp[segmentsComp.ClampListPos(pos)].p1;
+        Vector3 lastPos = component.segments[component.segments.ClampListPos(pos)].p1;
 
         //The spline's resolution
         //Make sure it's is adding up to 1, so 0.3 will give a gap, but 0.2 will work
@@ -368,36 +378,36 @@ public class SplineEditor : Editor
             if (close.boolValue)
             {
                 newPos = SplineUtils.GetCatmullRomPosition(t,
-                segmentsComp[segmentsComp.ClampListPos(pos - 1)].p1,
-                segmentsComp[segmentsComp.ClampListPos(pos)].p1,
-                segmentsComp[segmentsComp.ClampListPos(pos)].p2,
-                segmentsComp[segmentsComp.ClampListPos(pos + 1)].p2);
+                component.segments[component.segments.ClampListPos(pos - 1)].p1,
+                component.segments[component.segments.ClampListPos(pos)].p1,
+                component.segments[component.segments.ClampListPos(pos)].p2,
+                component.segments[component.segments.ClampListPos(pos + 1)].p2);
             }
             else
             {
                 if (pos == 0)
                 {
                     newPos = SplineUtils.GetCatmullRomPosition(t,
-                    segmentsComp[segmentsComp.ClampListPos(pos)].p1,
-                    segmentsComp[segmentsComp.ClampListPos(pos)].p1,
-                    segmentsComp[segmentsComp.ClampListPos(pos)].p2,
-                    segmentsComp[segmentsComp.ClampListPos(pos + 1)].p2);
+                    component.segments[component.segments.ClampListPos(pos)].p1,
+                    component.segments[component.segments.ClampListPos(pos)].p1,
+                    component.segments[component.segments.ClampListPos(pos)].p2,
+                    component.segments[component.segments.ClampListPos(pos + 1)].p2);
                 }
                 else if (pos == segments.arraySize - 1)
                 {
                     newPos = SplineUtils.GetCatmullRomPosition(t,
-                    segmentsComp[segmentsComp.ClampListPos(pos - 1)].p1,
-                    segmentsComp[segmentsComp.ClampListPos(pos)].p1,
-                    segmentsComp[segmentsComp.ClampListPos(pos)].p2,
-                    segmentsComp[segmentsComp.ClampListPos(pos)].p2);
+                    component.segments[component.segments.ClampListPos(pos - 1)].p1,
+                    component.segments[component.segments.ClampListPos(pos)].p1,
+                    component.segments[component.segments.ClampListPos(pos)].p2,
+                    component.segments[component.segments.ClampListPos(pos)].p2);
                 }
                 else
                 {
                     newPos = SplineUtils.GetCatmullRomPosition(t,
-                    segmentsComp[segmentsComp.ClampListPos(pos - 1)].p1,
-                    segmentsComp[segmentsComp.ClampListPos(pos)].p1,
-                    segmentsComp[segmentsComp.ClampListPos(pos)].p2,
-                    segmentsComp[segmentsComp.ClampListPos(pos + 1)].p2);
+                    component.segments[component.segments.ClampListPos(pos - 1)].p1,
+                    component.segments[component.segments.ClampListPos(pos)].p1,
+                    component.segments[component.segments.ClampListPos(pos)].p2,
+                    component.segments[component.segments.ClampListPos(pos + 1)].p2);
                 }
             }
 
@@ -481,9 +491,9 @@ public class SplineEditor : Editor
         GUILayout.EndHorizontal();
     }
 
-    private void AddPoint(Transform trComp, ref Spline.Segment[] segmentsComp)
+    private void AddPoint()
     {
-        Transform parent = trComp.parent;
+        Transform parent = component.transform.parent;
 
         Ray r = HandleUtility.GUIPointToWorldRay(currentEvt.mousePosition);
 
@@ -492,71 +502,71 @@ public class SplineEditor : Editor
 
         if (parent)
         {
-            dist = (parent.TransformPoint(segmentsComp[segmentsComp.Length - 1].p2) - r.origin).magnitude;
+            dist = (parent.TransformPoint(component.segments[component.segments.Length - 1].p2) - r.origin).magnitude;
             position = parent.InverseTransformPoint(r.origin) + r.direction * dist;
         }
         else
         {
-            dist = (segmentsComp[segmentsComp.Length - 1].p2 - r.origin).magnitude;
+            dist = (component.segments[component.segments.Length - 1].p2 - r.origin).magnitude;
             position = r.origin + r.direction * dist;
         }
 
-        int length = segmentsComp.Length;
+        int length = component.segments.Length;
 
         Spline.Segment[] tmpArray = new Spline.Segment[length];
-        System.Array.Copy(segmentsComp, tmpArray, length);
+        System.Array.Copy(component.segments, tmpArray, length);
 
-        segmentsComp = new Spline.Segment[length + 1];
+        component.segments = new Spline.Segment[length + 1];
 
-        for (int i = 0; i < segmentsComp.Length; ++i)
+        for (int i = 0; i < component.segments.Length; ++i)
         {
-            if (i == segmentsComp.Length - 1)
+            if (i == component.segments.Length - 1)
             {
-                segmentsComp[i] = new Spline.Segment();
+                component.segments[i] = new Spline.Segment();
                 if (close.boolValue)
                 {
-                    segmentsComp[i].p1 = position;
-                    segmentsComp[i].p2 = segmentsComp[0].p1;
+                    component.segments[i].p1 = position;
+                    component.segments[i].p2 = component.segments[0].p1;
 
-                    segmentsComp[i - 1].p2 = position;
+                    component.segments[i - 1].p2 = position;
                 }
                 else
                 {
-                    segmentsComp[i].p1 = segmentsComp[i - 1].p2;
-                    segmentsComp[i].p2 = position;
+                    component.segments[i].p1 = component.segments[i - 1].p2;
+                    component.segments[i].p2 = position;
                 }
             }
-            else segmentsComp[i] = new Spline.Segment(tmpArray[i]);
+            else component.segments[i] = new Spline.Segment(tmpArray[i]);
         }
 
-        Repaint();
+        SceneView.RepaintAll();
     }
 
-    private bool RemovePoint(Transform trComp, ref Spline.Segment[] segmentsComp)
+    private bool RemovePoint()
     {
-        Transform parent = trComp.parent;
+        Transform parent = component.transform.parent;
 
         idPointSelects.Clear();
         if (parent)
         {
-            for (int i = 0; i < segmentsComp.Length; ++i)
+            for (int i = 0; i < component.segments.Length; ++i)
             {
-                if (Handles.Button(parent.TransformPoint(segmentsComp[i].p2), Quaternion.identity, radiusHandle.floatValue, radiusHandle.floatValue, Handles.SphereHandleCap)
-                    || Handles.Button(parent.TransformPoint(segmentsComp[i].p1), Quaternion.identity, radiusHandle.floatValue, radiusHandle.floatValue, Handles.SphereHandleCap))
+                if (Handles.Button(parent.TransformPoint(component.segments[i].p2), Quaternion.identity, radiusHandle.floatValue, radiusHandle.floatValue, Handles.SphereHandleCap)
+                    || Handles.Button(parent.TransformPoint(component.segments[i].p1), Quaternion.identity, radiusHandle.floatValue, radiusHandle.floatValue, Handles.SphereHandleCap))
                 {
-                    RemovePoint(ref segmentsComp, i);
+                    RemovePoint(i);
                     return true;
                 }
             }
         }
         else
         {
-            for (int i = 0; i < segmentsComp.Length; ++i)
+            for (int i = 0; i < component.segments.Length; ++i)
             {
-                if (Handles.Button(segmentsComp[i].p2, Quaternion.identity, radiusHandle.floatValue, radiusHandle.floatValue, Handles.SphereHandleCap)
-                    || Handles.Button(segmentsComp[i].p1, Quaternion.identity, radiusHandle.floatValue, radiusHandle.floatValue, Handles.SphereHandleCap))
+                if (Handles.Button(component.segments[i].p2, Quaternion.identity, radiusHandle.floatValue, radiusHandle.floatValue, Handles.SphereHandleCap)
+                    || Handles.Button(component.segments[i].p1, Quaternion.identity, radiusHandle.floatValue, radiusHandle.floatValue, Handles.SphereHandleCap))
                 {
-                    RemovePoint(ref segmentsComp, i);
+                    RemovePoint(i);
                     return true;
                 }
             }
@@ -565,46 +575,114 @@ public class SplineEditor : Editor
         return false;
     }
 
-    private void RemovePoint(ref Spline.Segment[] segmentsComp, int id)
+    private void RemovePoint(int id)
     {
-        int length = segmentsComp.Length;
+        int length = component.segments.Length;
         int indexTmp = 0;
         Spline.Segment[] tmpArray = new Spline.Segment[length];
-        System.Array.Copy(segmentsComp, tmpArray, length);
+        System.Array.Copy(component.segments, tmpArray, length);
 
-        segmentsComp = new Spline.Segment[length - 1];
+        component.segments = new Spline.Segment[length - 1];
 
-        for (int i = 0; i < segmentsComp.Length; ++i)
+        for (int i = 0; i < component.segments.Length; ++i)
         {
             if (i == id)
             {
                 indexTmp++;
-                segmentsComp[i] = new Spline.Segment(tmpArray[indexTmp]);
+                component.segments[i] = new Spline.Segment(tmpArray[indexTmp]);
 
                 if ((i - 1) >= 0)
                 {
-                    segmentsComp[i - 1].p2 = segmentsComp[i].p1;
+                    component.segments[i - 1].p2 = component.segments[i].p1;
                 }
             }
             else
             {
-                segmentsComp[i] = new Spline.Segment(tmpArray[indexTmp]);
+                component.segments[i] = new Spline.Segment(tmpArray[indexTmp]);
             }
             indexTmp++;
         }
 
-        Repaint();
+        SceneView.RepaintAll();
     }
 
     private void SelectPoint(int id)
     {
         if (!currentEvt.shift)
+        {
             idPointSelects.Clear();
+            currentEvt.Use();
+        }
 
         if (!idPointSelects.Contains(id))
         {
             idPointSelects.Add(id);
-            Repaint();
+            SceneView.RepaintAll();
         }
+    }
+
+    private void DebugShowSphere(Vector2 mousePosition)
+    {
+        Transform parent = component.transform.parent;
+        Vector3 rPosition = Vector3.zero;
+        Vector3 newPos = Vector3.zero;
+        float newDist = 10000000000.0f;
+
+        rPosition = HandleUtility.GUIPointToWorldRay(currentEvt.mousePosition).GetPoint(10);
+
+        for (int i = 0; i < component.segments.Length; ++i)
+        {
+            Vector3 middle = (component.segments[i].p1 + component.segments[i].p2) * 0.5f;
+            Vector3 posTemp = Vector3.Project((rPosition - component.segments[i].p1), (component.segments[i].p2 - component.segments[i].p1)) + component.segments[i].p1;
+            float dist = (posTemp - middle).sqrMagnitude;
+
+            if (dist < newDist)
+            {
+                newPos = posTemp;
+                newDist = dist;
+            }
+        }
+
+        Handles.SphereHandleCap(0, newPos, Quaternion.identity, radiusHandle.floatValue, EventType.Repaint);
+    }
+
+    // private bool isDragging = false;
+    private void HandleSceneDrag()
+    {
+        /* if (currentEvt.type == EventType.MouseDown && currentEvt.button == 0 && GUIUtility.hotControl != 0)
+         {
+             //Debug.Log("start");
+             GUIUtility.hotControl = controlID;
+             isDragging = true;
+         }
+
+         if (currentEvt.type == EventType.MouseUp && Event.current.button == 0 && GUIUtility.hotControl == controlID)
+         {
+             // Debug.Log("end");
+             isDragging = false;
+             currentEvt.Use();
+         }
+
+         if (currentEvt.type == EventType.MouseDrag && Event.current.button == 0 && GUIUtility.hotControl == controlID)
+         {
+             // Debug.Log("drag");
+             isDragging = true;
+             currentEvt.Use();
+         }*/
+
+        /* if (isDragging)
+         {*/
+        DebugShowSphere(currentEvt.mousePosition);
+        //   }
+    }
+
+    private void CreateSceneDragObjects()
+    {
+
+    }
+
+    private void CleanUp(bool deleteTempSceneObject)
+    {
+
     }
 }

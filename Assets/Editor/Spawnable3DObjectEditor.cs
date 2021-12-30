@@ -6,7 +6,7 @@ using UnityEngine;
 [CustomEditor(typeof(Spawnable3DObject))]
 public class Spawnable3DObjectEditor : SplineEditor
 {
-    private Spawnable3DObject component;
+    private new Spawnable3DObject component;
     private SerializedProperty spawnableObjects;
     private SerializedProperty step;
     private SerializedProperty useDirection;
@@ -46,7 +46,7 @@ public class Spawnable3DObjectEditor : SplineEditor
         EditorGUI.BeginChangeCheck();
         serializedObject.Update();
 
-        base.OnInspectorGUI(component.transform);
+        base.OnInspectorGUI();
 
         DisplayOptions();
 
@@ -62,9 +62,9 @@ public class Spawnable3DObjectEditor : SplineEditor
         }
     }
 
-    private void OnSceneGUI()
+    public override void OnSceneGUI()
     {
-        base.OnSceneGUI(component.transform, ref component.segments, ref component.center);
+        base.OnSceneGUI();
 
         if (adaptToSurface.boolValue)
             DisplayRadiusSurfaceDetection();
@@ -173,7 +173,7 @@ public class Spawnable3DObjectEditor : SplineEditor
         EditorGUILayout.PropertyField(useDirection);
 
         EditorGUILayout.PropertyField(rotationType);
-        
+
         switch ((Spawnable3DObject.RotationType)rotationType.enumValueIndex)
         {
             case Spawnable3DObject.RotationType.none:
