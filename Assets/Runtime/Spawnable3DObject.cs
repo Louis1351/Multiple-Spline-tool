@@ -35,6 +35,8 @@ public class Spawnable3DObject : Spline
     [SerializeField]
     private bool randomOffset = false;
     [SerializeField]
+    private Vector3Int offsetAxis = Vector3Int.zero;
+    [SerializeField]
     private float distanceOffset = 0.0f;
     [SerializeField]
     private bool useDirection = false;
@@ -47,7 +49,7 @@ public class Spawnable3DObject : Spline
     private Vector3 minScale = Vector3.one;
     [SerializeField]
     private Vector3 maxScale = Vector3.one;
-    [Curve3D(1)]
+    [Curve3D(false, true)]
     [SerializeField]
     private Vector3Curve curvedScale;
 
@@ -60,7 +62,7 @@ public class Spawnable3DObject : Spline
     private Vector3 minRotation = Vector3.zero;
     [SerializeField]
     private Vector3 maxRotation = Vector3.zero;
-    [Curve3D(1)]
+    [Curve3D(false, true)]
     [SerializeField]
     private Vector3Curve curvedRotation;
 
@@ -97,12 +99,18 @@ public class Spawnable3DObject : Spline
         do
         {
             if (randomOffset)
+            {
                 randomOffsetVec = Random.onUnitSphere * distanceOffset;
+                randomOffsetVec.x *= offsetAxis.x;
+                randomOffsetVec.y *= offsetAxis.y;
+                randomOffsetVec.z *= offsetAxis.z;
+            }
+
 
             go = PrefabUtility.InstantiatePrefab(spawnableObjects[((randomOrder) ? Random.Range(0, spawnableObjects.Length) : index)]) as GameObject;
-            go.transform.localPosition = GetPosition(t) + randomOffsetVec;
+            go.transform.localPosition = GetPositionAtDistance(t) + randomOffsetVec;
 
-            dir = go.transform.position - GetPosition(t + 0.01f);
+            dir = go.transform.position - GetPositionAtDistance(t + 0.01f);
 
             if (useDirection)
             {

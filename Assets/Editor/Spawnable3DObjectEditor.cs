@@ -6,7 +6,7 @@ using UnityEngine;
 [CustomEditor(typeof(Spawnable3DObject))]
 public class Spawnable3DObjectEditor : SplineEditor
 {
-    private new Spawnable3DObject component;
+    private Spawnable3DObject componentTarget;
     private SerializedProperty spawnableObjects;
     private SerializedProperty step;
     private SerializedProperty useDirection;
@@ -17,6 +17,7 @@ public class Spawnable3DObjectEditor : SplineEditor
 
     private SerializedProperty randomOrder;
     private SerializedProperty randomOffset;
+    private SerializedProperty offsetAxis;
     private SerializedProperty distanceOffset;
 
     private SerializedProperty scaleType;
@@ -56,7 +57,7 @@ public class Spawnable3DObjectEditor : SplineEditor
         {
             if (autoGenerate.boolValue)
             {
-                component.GenerateObjects();
+                componentTarget.GenerateObjects();
             }
             Undo.RecordObject(target, "Changed Properties");
         }
@@ -73,7 +74,7 @@ public class Spawnable3DObjectEditor : SplineEditor
         {
             if (autoGenerate.boolValue)
             {
-                component.GenerateObjects();
+                componentTarget.GenerateObjects();
             }
             Undo.RecordObject(target, "Changed Properties");
         }
@@ -95,7 +96,7 @@ public class Spawnable3DObjectEditor : SplineEditor
 
         if (!autoGenerate.boolValue && GUILayout.Button("Instantiate Objects"))
         {
-            component.GenerateObjects();
+            componentTarget.GenerateObjects();
         }
 
         DisplayDebug();
@@ -158,6 +159,7 @@ public class Spawnable3DObjectEditor : SplineEditor
         if (randomOffset.boolValue)
         {
             EditorGUILayout.PropertyField(distanceOffset);
+            EditorGUILayout.PropertyField(offsetAxis);
         }
 
         GUILayout.EndVertical();
@@ -265,7 +267,7 @@ public class Spawnable3DObjectEditor : SplineEditor
     public override void Initialize()
     {
         base.Initialize();
-        component = target as Spawnable3DObject;
+        componentTarget = target as Spawnable3DObject;
 
         spawnableObjects = serializedObject.FindProperty("spawnableObjects");
         step = serializedObject.FindProperty("step");
@@ -277,6 +279,7 @@ public class Spawnable3DObjectEditor : SplineEditor
 
         randomOrder = serializedObject.FindProperty("randomOrder");
         randomOffset = serializedObject.FindProperty("randomOffset");
+        offsetAxis = serializedObject.FindProperty("offsetAxis");
         distanceOffset = serializedObject.FindProperty("distanceOffset");
 
         scaleType = serializedObject.FindProperty("scaleType");

@@ -210,7 +210,7 @@ public class Movable3DObject : Spline
                 }
             }
 
-            transform.localPosition = GetPosition(currentDist);
+            transform.localPosition = GetPositionAtDistance(currentDist);
         }
     }
 
@@ -243,7 +243,7 @@ public class Movable3DObject : Spline
                 }
             }
 
-            transform.localPosition = GetPosition(currentDist);
+            transform.localPosition = GetPositionAtDistance(currentDist);
         }
     }
 

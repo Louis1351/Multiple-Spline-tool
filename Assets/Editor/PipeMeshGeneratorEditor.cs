@@ -7,7 +7,7 @@ using UnityEngine;
 [CustomEditor(typeof(PipeMeshGenerator))]
 public class PipeMeshGeneratorEditor : SplineEditor
 {
-    private new PipeMeshGenerator component = null;
+    private PipeMeshGenerator componentTarget;
     private SerializedProperty nbQuad;
     private SerializedProperty width;
     private SerializedProperty materials;
@@ -42,11 +42,11 @@ public class PipeMeshGeneratorEditor : SplineEditor
             {
                 if (!useCatmullRom.boolValue)
                 {
-                    component.Generate(component.segments);
+                    componentTarget.Generate(componentTarget.segments);
                 }
                 else
                 {
-                    component.Generate();
+                    componentTarget.Generate();
                 }
 
                 Undo.RecordObject(target, "Changed Properties");
@@ -64,11 +64,11 @@ public class PipeMeshGeneratorEditor : SplineEditor
             {
                 if (!useCatmullRom.boolValue)
                 {
-                    component.Generate(component.segments);
+                    componentTarget.Generate(componentTarget.segments);
                 }
                 else
                 {
-                    component.Generate();
+                    componentTarget.Generate();
                 }
             }
             Undo.RecordObject(target, "Changed Properties");
@@ -103,17 +103,17 @@ public class PipeMeshGeneratorEditor : SplineEditor
         {
             if (!useCatmullRom.boolValue)
             {
-                component.Generate(component.segments);
+                componentTarget.Generate(componentTarget.segments);
             }
             else
             {
-                component.Generate();
+                componentTarget.Generate();
             }
         }
 
         if (GUILayout.Button("Save Mesh"))
         {
-            component.SaveMesh();
+            componentTarget.SaveMesh();
         }
 
         DisplayDebug();
@@ -137,7 +137,7 @@ public class PipeMeshGeneratorEditor : SplineEditor
     public override void Initialize()
     {
         base.Initialize();
-        component = target as PipeMeshGenerator;
+        componentTarget = target as PipeMeshGenerator;
 
         nbQuad = serializedObject.FindProperty("nbQuad");
         width = serializedObject.FindProperty("width");

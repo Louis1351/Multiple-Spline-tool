@@ -178,7 +178,7 @@ public class PipeMeshGenerator : Spline
 
         do
         {
-            points.Add(GetPosition(t));
+            points.Add(GetPositionAtDistance(t));
             t += catmullRollStep;
         }
         while (t < segments[segments.Length - 1].p2length);
@@ -327,13 +327,15 @@ public class PipeMeshGenerator : Spline
 
     public void SaveMesh()
     {
+#if UNITY_EDITOR
         MeshFilter meshF = GetComponentInChildren<MeshFilter>();
         if (meshF && meshF.sharedMesh)
         {
             SaveMesh(meshF.sharedMesh);
         }
+#endif
     }
-
+#if UNITY_EDITOR
     public static void SaveMesh(Mesh mesh)
     {
         string path = EditorUtility.SaveFilePanel("Save Separate Mesh Asset", "Assets/", mesh.name, "asset");
@@ -345,4 +347,5 @@ public class PipeMeshGenerator : Spline
         AssetDatabase.CreateAsset(mesh, path);
         AssetDatabase.SaveAssets();
     }
+#endif
 }

@@ -20,16 +20,25 @@ public class SplineEditor : Editor
     protected Event currentEvt = null;
 
     protected SerializedProperty radiusHandle;
+    protected SerializedProperty selectionColorHandle;
     protected SerializedProperty colorHandle;
     protected List<int> idPointSelects;
 
-    protected Spline component;
+    private Spline component;
+    private bool edit = false;
+    private bool add = false;
+
+    public Spline Component { get => component; set => component = value; }
 
     public virtual void OnEnable()
     {
+        //  CreateColliderObjects();
         oldClose = close.boolValue;
     }
-
+    private void OnDisable()
+    {
+        //    CleanColliderObjects();
+    }
     public override void OnInspectorGUI()
     {
         int oldSizeArray = segments.arraySize;
@@ -100,6 +109,25 @@ public class SplineEditor : Editor
             EditorGUILayout.PropertyField(center);
         }
 
+        GUI.backgroundColor = (edit) ? Color.green : Color.white;
+        if (GUILayout.Button("Edit"))
+        {
+            edit = !edit;
+            add = false;
+            if (!edit)
+            {
+                DeselectPoints();
+            }
+        }
+
+        GUI.backgroundColor = (add) ? Color.green : Color.white;
+        if (GUILayout.Button("Add/Remove"))
+        {
+            edit = false;
+            DeselectPoints();
+            add = !add;
+        }
+        GUI.backgroundColor = Color.white;
         GUILayout.EndVertical();
         GUILayout.EndHorizontal();
         //}
@@ -114,7 +142,7 @@ public class SplineEditor : Editor
 
         EditorGUI.BeginChangeCheck();
 
-        HandleSceneDrag();
+
 
 
         if (segments.arraySize > 0)
@@ -136,17 +164,26 @@ public class SplineEditor : Editor
             SetCircleSegments(radius.floatValue);
         }
 
-        if (currentEvt.control && currentEvt.button == 0)
+        if (add)
         {
-            if (!RemovePoint())
+            if (currentEvt.control && currentEvt.button == 0)
             {
-                if (currentEvt.type == EventType.MouseDown)
+                if (!RemovePoint())
                 {
-                    AddPoint(); 
-                    currentEvt.Use();
+                    if (currentEvt.type == EventType.MouseDown)
+                    {
+                        //  AddPoint();
+
+                    }
                 }
+                //  currentEvt.Use();
+            }
+            else
+            {
+                AddNewPoint();
             }
         }
+
 
         EditorGUI.EndChangeCheck();
     }
@@ -154,7 +191,6 @@ public class SplineEditor : Editor
     private void SetFreeSegments()
     {
         Transform parent = component.transform.parent;
-        Vector3 firstP = Vector3.zero;
         Vector3 LastP = Vector3.zero;
         Vector3 newP1 = Vector3.zero;
         Vector3 newP2 = Vector3.zero;
@@ -168,18 +204,20 @@ public class SplineEditor : Editor
                 newP1 = DrawHandle(-1, i.ToString(), component.segments[i].p1, Quaternion.identity);
 
                 component.segments[i].p1 = newP1;
-                firstP = newP1;
             }
             else
             {
                 newP1 = LastP;
-                if (i >= component.segments.Length) break;
+
+                if (i >= component.segments.Length)
+                    break;
+
                 component.segments[i].p1 = newP1;
             }
 
             if (close.boolValue && i == segments.arraySize - 1)
             {
-                newP2 = firstP;
+                newP2 = component.segments[0].p1;
             }
             else
             {
@@ -211,7 +249,6 @@ public class SplineEditor : Editor
     private void SetCircleSegments(float _radius)
     {
         Transform parent = component.transform.parent;
-        Vector3 firstP = Vector3.zero;
         Vector3 LastP = Vector3.zero;
         Vector3 newP1 = Vector3.zero;
         Vector3 newP2 = Vector3.zero;
@@ -234,7 +271,6 @@ public class SplineEditor : Editor
                 newP1 = DrawHandle(i, i.ToString(), newCenter + eulerRot * new Vector3(Mathf.Cos(DivPI2 * i), Mathf.Sin(DivPI2 * i)) * _radius, Quaternion.identity);
 
                 component.segments[i].p1 = newP1;
-                firstP = newP1;
             }
             else
             {
@@ -245,7 +281,7 @@ public class SplineEditor : Editor
 
             if (close.boolValue && i == segments.arraySize - 1)
             {
-                newP2 = firstP;
+                newP2 = component.segments[0].p1;
             }
             else
             {
@@ -276,26 +312,18 @@ public class SplineEditor : Editor
 
     private Vector3 DrawHandle(int id, string name, Vector3 position, Quaternion rotation)
     {
+        Color color = colorHandle.colorValue;
         Transform parent = component.transform.parent;
         Vector3 newPos = position;
         GUIStyle style = new GUIStyle();
-        style.normal.textColor = colorHandle.colorValue;
+        style.normal.textColor = color;
         style.fontStyle = FontStyle.Bold;
         style.fontSize = 15;
         style.alignment = TextAnchor.MiddleCenter;
 
-        if (currentEvt.modifiers != EventModifiers.Control &&
-        Handles.Button((parent) ? parent.transform.TransformPoint(position) : position, Quaternion.identity, radiusHandle.floatValue, radiusHandle.floatValue, Handles.SphereHandleCap))
-        {
-            if ((circleShape.boolValue && id == -1) || !circleShape.boolValue)
-            {
-                SelectPoint(id);
-            }
-            currentEvt.Use();
-        }
-
         if (idPointSelects.Contains(id))
         {
+            Handles.color = color = selectionColorHandle.colorValue; ;
             if (parent)
             {
                 Vector3 npos = Handles.PositionHandle(parent.TransformPoint(position), Quaternion.identity);
@@ -305,13 +333,25 @@ public class SplineEditor : Editor
         }
         else
         {
-            if ((circleShape.boolValue && id == -1) || !circleShape.boolValue)
+
+            Handles.color = color;
+            if (Handles.Button((parent) ? parent.transform.TransformPoint(position) : position, Quaternion.identity, radiusHandle.floatValue, radiusHandle.floatValue, Handles.SphereHandleCap))
             {
-                Handles.color = colorHandle.colorValue;
-                Handles.SphereHandleCap(0, (parent) ? parent.TransformPoint(position) : position, Quaternion.identity, radiusHandle.floatValue, EventType.Repaint);
+                if (edit)
+                {
+                    if (currentEvt.modifiers != EventModifiers.Control)
+                    {
+                        if ((circleShape.boolValue && id == -1) || !circleShape.boolValue)
+                        {
+                            SelectPoint(id);
+                        }
+                        currentEvt.Use();
+                    }
+
+                    Handles.color = colorHandle.colorValue;
+                }
             }
         }
-
         Handles.Label((parent) ? parent.TransformPoint(position) : position + Vector3.up * radiusHandle.floatValue * 2.0f, name, style);
 
         return newPos;
@@ -337,6 +377,7 @@ public class SplineEditor : Editor
 
         radiusHandle = serializedObject.FindProperty("radiusHandle");
         colorHandle = serializedObject.FindProperty("colorHandle");
+        selectionColorHandle = serializedObject.FindProperty("selectionColorHandle");
 
         if (idPointSelects == null)
         {
@@ -487,56 +528,36 @@ public class SplineEditor : Editor
         EditorGUILayout.LabelField("Debug", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(radiusHandle);
         EditorGUILayout.PropertyField(colorHandle);
+        EditorGUILayout.PropertyField(selectionColorHandle);
         GUILayout.EndVertical();
         GUILayout.EndHorizontal();
     }
 
-    private void AddPoint()
+    private void AddPoint(Vector3 position, int segmentID)
     {
-        Transform parent = component.transform.parent;
-
-        Ray r = HandleUtility.GUIPointToWorldRay(currentEvt.mousePosition);
-
-        float dist = 0.0f;
-        Vector3 position = Vector3.zero;
-
-        if (parent)
-        {
-            dist = (parent.TransformPoint(component.segments[component.segments.Length - 1].p2) - r.origin).magnitude;
-            position = parent.InverseTransformPoint(r.origin) + r.direction * dist;
-        }
-        else
-        {
-            dist = (component.segments[component.segments.Length - 1].p2 - r.origin).magnitude;
-            position = r.origin + r.direction * dist;
-        }
-
         int length = component.segments.Length;
 
         Spline.Segment[] tmpArray = new Spline.Segment[length];
         System.Array.Copy(component.segments, tmpArray, length);
 
         component.segments = new Spline.Segment[length + 1];
-
-        for (int i = 0; i < component.segments.Length; ++i)
+        int idTmp = 0;
+        for (int i = 0; (i + idTmp) < component.segments.Length; ++i)
         {
-            if (i == component.segments.Length - 1)
+            if (i == segmentID)
             {
+                //not closed
                 component.segments[i] = new Spline.Segment();
-                if (close.boolValue)
-                {
-                    component.segments[i].p1 = position;
-                    component.segments[i].p2 = component.segments[0].p1;
+                component.segments[i].p1 = tmpArray[i].p1;
+                component.segments[i].p2 = position;
 
-                    component.segments[i - 1].p2 = position;
-                }
-                else
-                {
-                    component.segments[i].p1 = component.segments[i - 1].p2;
-                    component.segments[i].p2 = position;
-                }
+                component.segments[i + 1] = new Spline.Segment();
+                component.segments[i + 1].p1 = position;
+                component.segments[i + 1].p2 = tmpArray[i].p2;
+
+                idTmp++;
             }
-            else component.segments[i] = new Spline.Segment(tmpArray[i]);
+            else component.segments[i + idTmp] = new Spline.Segment(tmpArray[i]);
         }
 
         SceneView.RepaintAll();
@@ -610,79 +631,98 @@ public class SplineEditor : Editor
     {
         if (!currentEvt.shift)
         {
-            idPointSelects.Clear();
             currentEvt.Use();
+            DeselectPoints();
         }
 
         if (!idPointSelects.Contains(id))
         {
             idPointSelects.Add(id);
+            Repaint();
             SceneView.RepaintAll();
         }
     }
 
-    private void DebugShowSphere(Vector2 mousePosition)
+    public void DeselectPoints()
+    {
+        idPointSelects.Clear();
+        Repaint();
+    }
+
+    private bool FindNewPoint(out Vector3 newPosition, out int segmentID, Vector2 mousePosition)
     {
         Transform parent = component.transform.parent;
-        Vector3 rPosition = Vector3.zero;
-        Vector3 newPos = Vector3.zero;
-        float newDist = 10000000000.0f;
 
-        rPosition = HandleUtility.GUIPointToWorldRay(currentEvt.mousePosition).GetPoint(10);
+        Plane plane;
+        //    Vector3 averagePoint = Vector3.zero;
+        Ray ray = HandleUtility.GUIPointToWorldRay(currentEvt.mousePosition);
+
+        bool findSomething = false;
+        float sqrRadiusHandle = radiusHandle.floatValue * radiusHandle.floatValue + 0.05f;
+
+        segmentID = 0;
+        newPosition = Vector3.zero;
+
+        float dTest = 0.0f;
+        float maxD = 0.5f;
+
+        Vector3 np = Vector3.zero;
+        Camera currentCam = SceneView.lastActiveSceneView.camera;
+        Vector3 middle = Vector3.zero;
 
         for (int i = 0; i < component.segments.Length; ++i)
         {
-            Vector3 middle = (component.segments[i].p1 + component.segments[i].p2) * 0.5f;
-            Vector3 posTemp = Vector3.Project((rPosition - component.segments[i].p1), (component.segments[i].p2 - component.segments[i].p1)) + component.segments[i].p1;
-            float dist = (posTemp - middle).sqrMagnitude;
-
-            if (dist < newDist)
+            if (parent)
             {
-                newPos = posTemp;
-                newDist = dist;
+                middle = parent.TransformPoint((component.segments[i].p1 + component.segments[i].p2) * 0.5f);
+                plane = new Plane(parent.TransformPoint(component.segments[i].p1), parent.TransformPoint(component.segments[i].p2), parent.TransformPoint(component.segments[i].p2) + currentCam.transform.up);
+            }
+            else
+            {
+                middle = (component.segments[i].p1 + component.segments[i].p2) * 0.5f;
+                plane = new Plane(component.segments[i].p1, component.segments[i].p2, component.segments[i].p2 + currentCam.transform.up);
+            }
+
+            if (plane.Raycast(ray, out float enter))
+            {
+                newPosition = ray.GetPoint(enter);
+
+
+                dTest = ((middle - newPosition).magnitude) / component.segments[i].length;
+
+                if (dTest < maxD)
+                {
+                    maxD = dTest;
+
+                    np = newPosition;
+                    findSomething = true;
+
+                    segmentID = i;
+                }
             }
         }
 
-        Handles.SphereHandleCap(0, newPos, Quaternion.identity, radiusHandle.floatValue, EventType.Repaint);
+        float d = component.segments[segmentID].p1length + (((parent) ? parent.TransformPoint(component.segments[segmentID].p1) : component.segments[segmentID].p1) - np).magnitude;
+        newPosition = component.GetPositionAtDistance(d);
+
+        if (findSomething)
+        {
+            Handles.color = selectionColorHandle.colorValue;
+            Handles.SphereHandleCap(0, (parent) ? parent.TransformPoint(newPosition) : newPosition, Quaternion.identity, radiusHandle.floatValue, EventType.Repaint);
+        }
+
+        return findSomething;
     }
-
-    // private bool isDragging = false;
-    private void HandleSceneDrag()
+    private void AddNewPoint()
     {
-        /* if (currentEvt.type == EventType.MouseDown && currentEvt.button == 0 && GUIUtility.hotControl != 0)
-         {
-             //Debug.Log("start");
-             GUIUtility.hotControl = controlID;
-             isDragging = true;
-         }
-
-         if (currentEvt.type == EventType.MouseUp && Event.current.button == 0 && GUIUtility.hotControl == controlID)
-         {
-             // Debug.Log("end");
-             isDragging = false;
-             currentEvt.Use();
-         }
-
-         if (currentEvt.type == EventType.MouseDrag && Event.current.button == 0 && GUIUtility.hotControl == controlID)
-         {
-             // Debug.Log("drag");
-             isDragging = true;
-             currentEvt.Use();
-         }*/
-
-        /* if (isDragging)
-         {*/
-        DebugShowSphere(currentEvt.mousePosition);
-        //   }
-    }
-
-    private void CreateSceneDragObjects()
-    {
-
-    }
-
-    private void CleanUp(bool deleteTempSceneObject)
-    {
-
+        if (FindNewPoint(out Vector3 pos, out int segmentID, currentEvt.mousePosition))
+        {
+            if (currentEvt.type == EventType.MouseDown && currentEvt.button == 0 && GUIUtility.hotControl != 0)
+            {
+                GUIUtility.hotControl = 0;
+                AddPoint(pos, segmentID);
+            }
+            SceneView.RepaintAll();
+        }
     }
 }

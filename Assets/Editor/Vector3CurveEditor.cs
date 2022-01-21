@@ -8,8 +8,8 @@ using UnityEngine.UIElements;
 public class Vector3CurveEditor : PropertyDrawer
 {
     private float propertyHeight = 20.0f;
-    private bool displayRangeX = true;
-    private bool displayRangeY = true;
+    private bool displayRangeX = false;
+    private bool displayRangeY = false;
 
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
@@ -22,12 +22,12 @@ public class Vector3CurveEditor : PropertyDrawer
         SerializedProperty curveY = property.FindPropertyRelative("curveY");
         SerializedProperty curveZ = property.FindPropertyRelative("curveZ");
 
-        MonoBehaviour mono = GameObject.FindObjectOfType<MonoBehaviour>();
+        MonoBehaviour mono = property.serializedObject.targetObject as MonoBehaviour;
         FieldInfo objectField = mono.GetType().GetField(property.name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);//.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         Curve3DAttribute attribute = null;
 
-        int RangeX = 0;
-        int RangeY = 0;
+        int RangeX = 1;
+        int RangeY = 1;
 
         if (objectField != null)
         {
@@ -35,14 +35,8 @@ public class Vector3CurveEditor : PropertyDrawer
             attribute = System.Attribute.GetCustomAttribute(objectField, typeof(Curve3DAttribute)) as Curve3DAttribute;
             if (attribute != null)
             {
-                if (attribute.RangeX > 0)
-                {
-                    displayRangeX = false;
-                }
-                if (attribute.RangeY > 0)
-                {
-                    displayRangeY = false;
-                }
+                displayRangeX = attribute.RangeX;
+                displayRangeY = attribute.RangeY;
             }
         }
         position = EditorGUI.PrefixLabel(position, GUIUtility.GetControlID(FocusType.Passive), label);
@@ -57,19 +51,11 @@ public class Vector3CurveEditor : PropertyDrawer
             RangeX = EditorGUI.IntField(position, "Range X", range.vector2IntValue.x);
             position.y += propertyHeight + 2;
         }
-        else
-        {
-            RangeX = attribute.RangeX;
-        }
 
         if (displayRangeY)
         {
             RangeY = EditorGUI.IntField(position, "Range Y", range.vector2IntValue.y);
             position.y += propertyHeight + 2;
-        }
-        else
-        {
-            RangeY = attribute.RangeY;
         }
 
         range.vector2IntValue = new Vector2Int(RangeX, RangeY);

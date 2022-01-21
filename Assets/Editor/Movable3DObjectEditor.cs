@@ -6,7 +6,7 @@ using UnityEngine;
 [CustomEditor(typeof(Movable3DObject))]
 public class Movable3DObjectEditor : SplineEditor
 {
-    private new Movable3DObject component;
+    private Movable3DObject componentTarget;
     private SerializedProperty type;
     private SerializedProperty isMovingOnStart;
     private SerializedProperty isChangingDirection;
@@ -47,11 +47,11 @@ public class Movable3DObjectEditor : SplineEditor
 
         if (EditorGUI.EndChangeCheck() && !Application.isPlaying)
         {
-            currentDist.floatValue = component.GetCurrentDistance(startingPos.floatValue);
+            currentDist.floatValue = componentTarget.GetCurrentDistance(startingPos.floatValue);
 
             if (isChangingDirection.boolValue)
             {
-                component.transform.forward = component.CurrentDir;
+                componentTarget.transform.forward = componentTarget.CurrentDir;
             }
             Undo.RecordObject(target, "Changed Properties");
         }
@@ -63,7 +63,7 @@ public class Movable3DObjectEditor : SplineEditor
 
         if (EditorGUI.EndChangeCheck() && !Application.isPlaying)
         {
-            currentDist.floatValue = component.GetCurrentDistance(startingPos.floatValue);
+            currentDist.floatValue = componentTarget.GetCurrentDistance(startingPos.floatValue);
             Undo.RecordObject(target, "Changed Properties");
         }
     }
@@ -72,7 +72,7 @@ public class Movable3DObjectEditor : SplineEditor
     {
         base.Initialize();
 
-        component = (Movable3DObject)target;
+        componentTarget = (Movable3DObject)target;
 
         type = serializedObject.FindProperty("type");
         isMovingOnStart = serializedObject.FindProperty("isMovingOnStart");

@@ -3,16 +3,16 @@ using UnityEngine;
 [AttributeUsage(AttributeTargets.Field)]
 public class Curve3DAttribute : Attribute
 {
-    public readonly int RangeX = 0;
-    public readonly int RangeY = 0;
+    public readonly bool RangeX = false;
+    public readonly bool RangeY = false;
 
-    public Curve3DAttribute(int RangeX, int RangeY)
+    public Curve3DAttribute(bool RangeX, bool RangeY)
     {
         this.RangeX = RangeX;
         this.RangeY = RangeY;
     }
 
-    public Curve3DAttribute(int RangeX)
+    public Curve3DAttribute(bool RangeX)
     {
         this.RangeX = RangeX;
     }
