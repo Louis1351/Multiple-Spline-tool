@@ -160,7 +160,6 @@ public class Spline : MonoBehaviour
     {
         return GetPositionAtDistance(GetCurrentDistance(_time));
     }
-
     public Vector3 GetPositionAtDistance(float _dist)
     {
         float dist = Mathf.Clamp(_dist, 0.0f, segments[segments.Length - 1].p2length);
@@ -233,12 +232,82 @@ public class Spline : MonoBehaviour
         }
         return transform.localPosition;
     }
+    public Vector3 GetPositionAtDistance(float _dist, bool withCatmullRoom)
+    {
+        float dist = Mathf.Clamp(_dist, 0.0f, segments[segments.Length - 1].p2length);
 
+        Vector3 newPos = Vector3.zero;
+        Vector3 newDir = Vector3.zero;
+        float t = 0.0f;
+        for (int i = 0; i < segments.Length; ++i)
+        {
+            if (dist >= segments[i].p1length && dist <= segments[i].p2length)
+            {
+                if (segments[i].length == 0)
+                {
+                    continue;
+                }
+
+                t = (dist - segments[i].p1length) / segments[i].length;
+
+                if (withCatmullRoom)
+                {
+                    if (close)
+                    {
+                        newPos = SplineUtils.GetCatmullRomPosition(t,
+                        segments[segments.ClampListPos(i - 1)].p1,
+                        segments[segments.ClampListPos(i)].p1,
+                        segments[segments.ClampListPos(i)].p2,
+                        segments[segments.ClampListPos(i + 1)].p2);
+                    }
+                    else
+                    {
+                        if (i == 0)
+                        {
+                            newPos = SplineUtils.GetCatmullRomPosition(t,
+                            segments[segments.ClampListPos(i)].p1,
+                            segments[segments.ClampListPos(i)].p1,
+                            segments[segments.ClampListPos(i)].p2,
+                            segments[segments.ClampListPos(i + 1)].p2);
+                        }
+                        else if (i == segments.Length - 1)
+                        {
+                            newPos = SplineUtils.GetCatmullRomPosition(t,
+                            segments[segments.ClampListPos(i - 1)].p1,
+                            segments[segments.ClampListPos(i)].p1,
+                            segments[segments.ClampListPos(i)].p2,
+                            segments[segments.ClampListPos(i)].p2);
+                        }
+                        else
+                        {
+                            newPos = SplineUtils.GetCatmullRomPosition(t,
+                           segments[segments.ClampListPos(i - 1)].p1,
+                           segments[segments.ClampListPos(i)].p1,
+                           segments[segments.ClampListPos(i)].p2,
+                           segments[segments.ClampListPos(i + 1)].p2);
+                        }
+                    }
+
+                    newDir = (newPos - transform.position);
+
+                    if (newDir != Vector3.zero)
+                        currentDir = newDir;
+
+                    return newPos;
+                }
+                else
+                {
+                    currentDir = segments[i].dir;
+                    return Vector3.Lerp(segments[i].p1, segments[i].p2, t);
+                }
+            }
+        }
+        return transform.localPosition;
+    }
     public void GetPositionAtTime(Transform transform, out Vector3 position, out Vector3 direction, float _time)
     {
         GetPositionAtDistance(transform, out position, out direction, GetCurrentDistance(_time));
     }
-
     public void GetPositionAtDistance(Transform transform, out Vector3 position, out Vector3 direction, float _dist)
     {
         float dist = Mathf.Clamp(_dist, 0.0f, segments[segments.Length - 1].p2length);
@@ -305,7 +374,6 @@ public class Spline : MonoBehaviour
             }
         }
     }
-
     public float GetCurrentDistance(float _time)
     {
         if (segments != null && segments.Length > 0)
@@ -317,7 +385,6 @@ public class Spline : MonoBehaviour
         }
         else return currentDist;
     }
-
     public float GetCurrentTime(float _distance)
     {
         float time = 0.0f;
