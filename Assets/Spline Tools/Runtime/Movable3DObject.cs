@@ -13,31 +13,38 @@ public class Movable3DObject : Spline
 
     public delegate void OnUpdate();
     public OnUpdate onUpdate;
+    [Tooltip("Execute an event when the object starts moving at the beginning of the spline.")]
     [SerializeField]
     private UnityEvent startMovement = null;
-
+    [Tooltip("Execute an event when the object arrives at the end of the spline.")]
     [SerializeField]
     private UnityEvent endMovement = null;
-
+    [Tooltip("Change the movement type.")]
     [SerializeField]
     private MovementType type = MovementType.Linear;
+    [Tooltip("the object's speed on the spline.")]
     [SerializeField]
     private float speed = 5.0f;
     [SerializeField]
     private bool useCurvedSpeed = false;
+    [Tooltip("the object's speed on the spline multiplies by the curve.")]
     [SerializeField]
     private AnimationCurve curve = null;
+    [Tooltip("Reverse the speed.")]
     [SerializeField]
     private bool isReversed = false;
 #pragma warning disable 414
+    [Tooltip("The starting position on the spline.")]
     [SerializeField]
     [Range(0.0f, 1.0f)]
     private float startingPos = 0.0f;
 #pragma warning restore 414
     [SerializeField]
     private bool isMovingOnStart = true;
+    [Tooltip("Rotate the object's transform with the spline direction.")]
     [SerializeField]
     private bool isChangingDirection = false;
+    [Tooltip("When the object arrives at the end of the spline, it goes back to the beginning.")]
     [SerializeField]
     private bool loop = false;
     private bool pingpong = false;

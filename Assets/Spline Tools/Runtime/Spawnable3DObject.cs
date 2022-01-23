@@ -25,28 +25,37 @@ public class Spawnable3DObject : Spline
         randomBetweenTwoConstant,
         randomByAxis
     }
-
+    [Tooltip("Choose the prefabs to Spawn.")]
     [SerializeField]
     private GameObject[] spawnableObjects = null;
+    [Tooltip("Space between each object.")]
     [SerializeField]
     private float step = 0.5f;
+    [Tooltip("Spawn the objects in the disorder.")]
     [SerializeField]
     private bool randomOrder = false;
+    [Tooltip("Spawn each object with a random offset. ")]
     [SerializeField]
     private bool randomOffset = false;
+    [Tooltip("Add an offset relative to the spline.")]
     [SerializeField]
     private Vector3Int offsetAxis = Vector3Int.zero;
+    [Tooltip("Set the offset distance.")]
     [SerializeField]
     private float distanceOffset = 0.0f;
+    [Tooltip("Rotate the spawned object's transform with the spline direction.")]
     [SerializeField]
     private bool useDirection = false;
 
     [SerializeField]
     private ScaleType scaleType = ScaleType.none;
+    [Tooltip("Set the scale for all objects.")]
     [SerializeField]
     private Vector3 currentScale = Vector3.one;
+    [Tooltip("Set the minimum scale.")]
     [SerializeField]
     private Vector3 minScale = Vector3.one;
+    [Tooltip("Set the maximum scale.")]
     [SerializeField]
     private Vector3 maxScale = Vector3.one;
     [Curve3D(false, true)]
@@ -56,22 +65,28 @@ public class Spawnable3DObject : Spline
 #pragma warning disable 414
     [SerializeField]
     private RotationType rotationType = RotationType.none;
+    [Tooltip("Set the rotation for all objects.")]
     [SerializeField]
     private Vector3 currentRotation = Vector3.zero;
+    [Tooltip("Set the minimum rotation.")]
     [SerializeField]
     private Vector3 minRotation = Vector3.zero;
+    [Tooltip("Set the maximum rotation.")]
     [SerializeField]
     private Vector3 maxRotation = Vector3.zero;
     [Curve3D(false, true)]
     [SerializeField]
     private Vector3Curve curvedRotation;
-
+    [Tooltip("If it detects a surface, it will change the transform rotation. (only works with collider object)")]
     [SerializeField]
     private bool adaptToSurface = false;
+    [Tooltip("Set the distance for the detection.")]
     [SerializeField]
     private float distanceDetection = 0.5f;
+    [Tooltip("Choose the layer to detect.")]
     [SerializeField]
     private LayerMask layers = 0;
+    [Tooltip("Generate the spline each modification.")]
     [SerializeField]
     private bool autoGenerate = false;
 #pragma warning restore 414

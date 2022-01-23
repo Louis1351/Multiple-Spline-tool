@@ -7,18 +7,19 @@ public class PipeMeshGenerator : Spline
 {
 
 #pragma warning restore 414
-
+    [Tooltip("Number of quad for each slice.")]
     [SerializeField]
     private int nbQuad = 4;
     [SerializeField]
     private float width = 2.0f;
-
     [SerializeField]
     private Material[] materials = null;
+    [Tooltip("Set Catmull Rom Precision")]
     [SerializeField]
-    private float catmullRollStep = 1.0f;
+    private float catmullRomStep = 1.0f;
 
 #pragma warning disable 414
+    [Tooltip("Generate the spline each modification.")]
     [SerializeField]
     private bool autoGenerate = false;
 #pragma warning restore 414
@@ -171,7 +172,7 @@ public class PipeMeshGenerator : Spline
     {
         List<Vector3> points = new List<Vector3>();
 
-        if (catmullRollStep <= 0.0f)
+        if (catmullRomStep <= 0.0f)
             return;
 
         float t = 0.0f;
@@ -179,7 +180,7 @@ public class PipeMeshGenerator : Spline
         do
         {
             points.Add(GetPositionAtDistance(t));
-            t += catmullRollStep;
+            t += catmullRomStep;
         }
         while (t < segments[segments.Length - 1].p2length);
 

@@ -11,7 +11,7 @@ public class PipeMeshGeneratorEditor : SplineEditor
     private SerializedProperty nbQuad;
     private SerializedProperty width;
     private SerializedProperty materials;
-    private SerializedProperty catmullRollStep;
+    private SerializedProperty catmullRomStep;
     private SerializedProperty autoGenerate;
 
     void OnAwake()
@@ -88,7 +88,7 @@ public class PipeMeshGeneratorEditor : SplineEditor
         EditorGUILayout.LabelField("Geometry", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(nbQuad);
         if (useCatmullRom.boolValue)
-            EditorGUILayout.PropertyField(catmullRollStep);
+            EditorGUILayout.PropertyField(catmullRomStep);
         EditorGUILayout.PropertyField(width);
 
 
@@ -143,7 +143,7 @@ public class PipeMeshGeneratorEditor : SplineEditor
         width = serializedObject.FindProperty("width");
         materials = serializedObject.FindProperty("materials");
 
-        catmullRollStep = serializedObject.FindProperty("catmullRollStep");
+        catmullRomStep = serializedObject.FindProperty("catmullRomStep");
         autoGenerate = serializedObject.FindProperty("autoGenerate");
     }
 }
