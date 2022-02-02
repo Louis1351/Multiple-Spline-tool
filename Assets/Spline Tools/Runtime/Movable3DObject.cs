@@ -13,6 +13,8 @@ public class Movable3DObject : Spline
 
     public delegate void OnUpdate();
     public OnUpdate onUpdate;
+    [SerializeField]
+    private Transform target = null;
     [Tooltip("Execute an event when the object starts moving at the beginning of the spline.")]
     [SerializeField]
     private UnityEvent startMovement = null;
@@ -64,25 +66,25 @@ public class Movable3DObject : Spline
         }
         set => speed = value;
     }
-   // public Vector3 Center { get => center; set => center = value; }
-    public Vector3 CurrentDir
-    {
-        get
-        {
-            float sign = 1.0f;
-            if (isReversed)
-            {
-                sign = -1.0f;
-            }
+    // public Vector3 Center { get => center; set => center = value; }
+    /* public Vector3 CurrentDir
+     {
+         get
+         {
+             float sign = 1.0f;
+             if (isReversed)
+             {
+                 sign = -1.0f;
+             }
 
-            if (pingpong)
-            {
-                sign *= -1.0f;
-            }
-            // Debug.Log(currentDir * sign);
-            return currentDir * sign;
-        }
-    }
+             if (pingpong)
+             {
+                 sign *= -1.0f;
+             }
+             // Debug.Log(currentDir * sign);
+             return currentDir * sign;
+         }
+     }*/
 
     private void Start()
     {
@@ -107,8 +109,10 @@ public class Movable3DObject : Spline
                 break;
         }
 
-        if (isChangingDirection)
-            transform.forward = currentDir;
+        //   if (target && isChangingDirection)
+        //   {
+        //target.forward = currentDir;
+        //     }
     }
 
     private void UpdateLinear()
@@ -190,7 +194,7 @@ public class Movable3DObject : Spline
 
     private void UpdatePositionASC(bool _islooping = false)
     {
-        if (currentDist <= segments[segments.Length - 1].p2length)
+        if (target && currentDist <= segments[segments.Length - 1].p2length)
         {
             if (onUpdate != null)
             {
@@ -217,13 +221,18 @@ public class Movable3DObject : Spline
                 }
             }
 
-            transform.localPosition = GetPositionAtDistance(currentDist);
+            GetPositionAtDistance(target, out Vector3 position, out Vector3 dir, currentDist);
+
+            target.localPosition = position;
+
+            if (isChangingDirection && dir != Vector3.zero)
+                target.forward = dir;
         }
     }
 
     private void UpdatePositionDESC(bool _islooping = false)
     {
-        if (currentDist >= 0.0f)
+        if (target && currentDist >= 0.0f)
         {
             if (onUpdate != null)
             {
@@ -250,7 +259,12 @@ public class Movable3DObject : Spline
                 }
             }
 
-            transform.localPosition = GetPositionAtDistance(currentDist);
+            GetPositionAtDistance(target, out Vector3 position, out Vector3 dir, currentDist);
+
+            target.localPosition = position;
+
+            if (isChangingDirection && dir != Vector3.zero)
+                target.forward = dir;
         }
     }
 

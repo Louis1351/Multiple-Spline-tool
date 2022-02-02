@@ -180,28 +180,24 @@ public class SplineEditor : Editor
 
         EditorGUI.EndChangeCheck();
     }
-    
-    Vector3 pivotPoint = Vector3.zero;
+
     private void MovePivot()
     {
-        Vector3 newPivotPoint = Vector3.zero;
-        pivotPoint = Vector3.zero;
-
-        for (int i = 0; i < component.segments.Length; ++i)
+        if (!edit && !add)
         {
-            pivotPoint += component.segments[i].p1;
-        }
-        pivotPoint /= component.segments.Length;
-        newPivotPoint = Handles.DoPositionHandle(pivotPoint, Quaternion.identity);
+            Vector3 lastPosition = component.transform.position;
 
-        if (newPivotPoint != pivotPoint)
-        {
-            Vector3 displacement = newPivotPoint - pivotPoint;
+            component.transform.position = Handles.DoPositionHandle(component.transform.position, Quaternion.identity);
 
-            component.segments[0].p1 += displacement;
-            for (int i = 0; i < component.segments.Length; ++i)
+            if (lastPosition != component.transform.position)
             {
-                component.segments[i].p2 += displacement;
+                Vector3 displacement = component.transform.position - lastPosition;
+
+                component.segments[0].p1 += displacement;
+                for (int i = 0; i < component.segments.Length; ++i)
+                {
+                    component.segments[i].p2 += displacement;
+                }
             }
         }
     }
@@ -286,7 +282,7 @@ public class SplineEditor : Editor
         {
             if (i == 0)
             {
-                newP1 = DrawHandle(i, i.ToString(), pivotPoint + eulerRot * new Vector3(Mathf.Cos(DivPI2 * i), Mathf.Sin(DivPI2 * i)) * _radius, Quaternion.identity);
+                newP1 = DrawHandle(i, i.ToString(), component.transform.position + eulerRot * new Vector3(Mathf.Cos(DivPI2 * i), Mathf.Sin(DivPI2 * i)) * _radius, Quaternion.identity);
 
                 component.segments[i].p1 = newP1;
             }
@@ -303,7 +299,7 @@ public class SplineEditor : Editor
             }
             else
             {
-                newP2 = DrawHandle(i, (i + 1).ToString(), pivotPoint + eulerRot * new Vector3(Mathf.Cos(DivPI2 * (i + 1)), Mathf.Sin(DivPI2 * (i + 1))) * _radius, Quaternion.identity);
+                newP2 = DrawHandle(i, (i + 1).ToString(), component.transform.position + eulerRot * new Vector3(Mathf.Cos(DivPI2 * (i + 1)), Mathf.Sin(DivPI2 * (i + 1))) * _radius, Quaternion.identity);
             }
 
             component.segments[i].p1length = dist;

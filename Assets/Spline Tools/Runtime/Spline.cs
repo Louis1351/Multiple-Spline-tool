@@ -133,8 +133,8 @@ public class Spline : MonoBehaviour
     protected bool useCatmullRom = false;
     [SerializeField]
     protected bool close = false;
-   /* [SerializeField]
-    public Vector3 center;*/
+    /* [SerializeField]
+     public Vector3 center;*/
     [SerializeField]
     protected bool demiCircle = false;
 
@@ -152,7 +152,7 @@ public class Spline : MonoBehaviour
     protected Color selectionColorHandle = Color.yellow;
     [SerializeField]
     protected Color colorHandle = Color.white;
-    protected Vector3 currentDir = Vector3.zero;
+    //protected Vector3 currentDir = Vector3.zero;
 
 #pragma warning restore 414
 
@@ -163,10 +163,9 @@ public class Spline : MonoBehaviour
     public Vector3 GetPositionAtDistance(float _dist)
     {
         float dist = Mathf.Clamp(_dist, 0.0f, segments[segments.Length - 1].p2length);
-
         Vector3 newPos = Vector3.zero;
-        Vector3 newDir = Vector3.zero;
         float t = 0.0f;
+
         for (int i = 0; i < segments.Length; ++i)
         {
             if (dist >= segments[i].p1length && dist <= segments[i].p2length)
@@ -216,16 +215,10 @@ public class Spline : MonoBehaviour
                         }
                     }
 
-                    newDir = (newPos - transform.position);
-
-                    if (newDir != Vector3.zero)
-                        currentDir = newDir;
-
                     return newPos;
                 }
                 else
                 {
-                    currentDir = segments[i].dir;
                     return Vector3.Lerp(segments[i].p1, segments[i].p2, t);
                 }
             }
@@ -235,10 +228,9 @@ public class Spline : MonoBehaviour
     public Vector3 GetPositionAtDistance(float _dist, bool withCatmullRoom)
     {
         float dist = Mathf.Clamp(_dist, 0.0f, segments[segments.Length - 1].p2length);
-
         Vector3 newPos = Vector3.zero;
-        Vector3 newDir = Vector3.zero;
         float t = 0.0f;
+
         for (int i = 0; i < segments.Length; ++i)
         {
             if (dist >= segments[i].p1length && dist <= segments[i].p2length)
@@ -288,16 +280,10 @@ public class Spline : MonoBehaviour
                         }
                     }
 
-                    newDir = (newPos - transform.position);
-
-                    if (newDir != Vector3.zero)
-                        currentDir = newDir;
-
                     return newPos;
                 }
                 else
                 {
-                    currentDir = segments[i].dir;
                     return Vector3.Lerp(segments[i].p1, segments[i].p2, t);
                 }
             }
@@ -311,11 +297,11 @@ public class Spline : MonoBehaviour
     public void GetPositionAtDistance(Transform transform, out Vector3 position, out Vector3 direction, float _dist)
     {
         float dist = Mathf.Clamp(_dist, 0.0f, segments[segments.Length - 1].p2length);
+        float t = 0.0f;
 
         position = transform.localPosition;
         direction = transform.forward;
 
-        float t = 0.0f;
         for (int i = 0; i < segments.Length; ++i)
         {
             if (dist >= segments[i].p1length && dist <= segments[i].p2length)
@@ -369,6 +355,7 @@ public class Spline : MonoBehaviour
                 }
                 else
                 {
+                    position = Vector3.Lerp(segments[i].p1, segments[i].p2, t);
                     direction = segments[i].dir;
                 }
             }
@@ -380,7 +367,6 @@ public class Spline : MonoBehaviour
         {
             float totalLength = segments[segments.Length - 1].p2length;
             currentDist = _time * totalLength;
-            transform.localPosition = GetPositionAtDistance(currentDist);
             return currentDist;
         }
         else return currentDist;

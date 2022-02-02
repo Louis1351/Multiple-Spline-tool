@@ -7,6 +7,7 @@ using UnityEngine;
 public class Movable3DObjectEditor : SplineEditor
 {
     private Movable3DObject componentTarget;
+    private SerializedProperty targetObject;
     private SerializedProperty type;
     private SerializedProperty isMovingOnStart;
     private SerializedProperty isChangingDirection;
@@ -49,10 +50,20 @@ public class Movable3DObjectEditor : SplineEditor
         {
             currentDist.floatValue = componentTarget.GetCurrentDistance(startingPos.floatValue);
 
-            if (isChangingDirection.boolValue)
+            Transform currentTarget = (targetObject.objectReferenceValue as Transform);
+
+            if (currentTarget)
             {
-                componentTarget.transform.forward = componentTarget.CurrentDir;
+                componentTarget.GetPositionAtDistance(currentTarget, out Vector3 position, out Vector3 dir, currentDist.floatValue);
+                currentTarget.position = position;
+
+                if (isChangingDirection.boolValue)
+                {
+                    if (dir != Vector3.zero)
+                        currentTarget.transform.forward = dir;
+                }
             }
+
             Undo.RecordObject(target, "Changed Properties");
         }
     }
@@ -64,6 +75,21 @@ public class Movable3DObjectEditor : SplineEditor
         if (EditorGUI.EndChangeCheck() && !Application.isPlaying)
         {
             currentDist.floatValue = componentTarget.GetCurrentDistance(startingPos.floatValue);
+
+            Transform currentTarget = (targetObject.objectReferenceValue as Transform);
+
+            if (currentTarget)
+            {
+                componentTarget.GetPositionAtDistance(currentTarget, out Vector3 position, out Vector3 dir, currentDist.floatValue);
+                currentTarget.position = position;
+
+                if (isChangingDirection.boolValue)
+                {
+                    if (dir != Vector3.zero)
+                        currentTarget.transform.forward = dir;
+                }
+            }
+
             Undo.RecordObject(target, "Changed Properties");
         }
     }
@@ -73,6 +99,8 @@ public class Movable3DObjectEditor : SplineEditor
         base.Initialize();
 
         componentTarget = (Movable3DObject)target;
+
+        targetObject = serializedObject.FindProperty("target");
 
         type = serializedObject.FindProperty("type");
         isMovingOnStart = serializedObject.FindProperty("isMovingOnStart");
@@ -94,6 +122,8 @@ public class Movable3DObjectEditor : SplineEditor
         GUILayout.BeginHorizontal();
         GUILayout.BeginVertical("GroupBox");
 
+        EditorGUILayout.PropertyField(targetObject);
+        
         DisplayMovement();
         DisplayVelocity();
         DisplayTransformOptions();
