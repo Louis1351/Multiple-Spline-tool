@@ -64,7 +64,7 @@ public class Movable3DObject : Spline
         }
         set => speed = value;
     }
-    public Vector3 Center { get => center; set => center = value; }
+   // public Vector3 Center { get => center; set => center = value; }
     public Vector3 CurrentDir
     {
         get

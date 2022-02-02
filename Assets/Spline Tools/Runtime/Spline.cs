@@ -133,8 +133,8 @@ public class Spline : MonoBehaviour
     protected bool useCatmullRom = false;
     [SerializeField]
     protected bool close = false;
-    [SerializeField]
-    public Vector3 center;
+   /* [SerializeField]
+    public Vector3 center;*/
     [SerializeField]
     protected bool demiCircle = false;
 

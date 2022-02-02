@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class SplineEditor : Editor
 {
-    protected SerializedProperty center;
+    //protected SerializedProperty center;
     protected SerializedProperty demiCircle;
     protected SerializedProperty rotation;
     protected SerializedProperty currentDist;
@@ -104,10 +104,10 @@ public class SplineEditor : Editor
                 }
             }
         }
-        else
-        {
-            EditorGUILayout.PropertyField(center);
-        }
+        /*    else
+            {
+                EditorGUILayout.PropertyField(center);
+            }*/
 
         GUI.backgroundColor = (edit) ? Color.green : Color.white;
         if (GUILayout.Button("Edit"))
@@ -142,13 +142,11 @@ public class SplineEditor : Editor
 
         EditorGUI.BeginChangeCheck();
 
-
-
-
         if (segments.arraySize > 0)
             Tools.current = Tool.None;
         else return;
 
+        MovePivot();
 
         if (useCatmullRom.boolValue)
         {
@@ -181,6 +179,31 @@ public class SplineEditor : Editor
 
 
         EditorGUI.EndChangeCheck();
+    }
+    
+    Vector3 pivotPoint = Vector3.zero;
+    private void MovePivot()
+    {
+        Vector3 newPivotPoint = Vector3.zero;
+        pivotPoint = Vector3.zero;
+
+        for (int i = 0; i < component.segments.Length; ++i)
+        {
+            pivotPoint += component.segments[i].p1;
+        }
+        pivotPoint /= component.segments.Length;
+        newPivotPoint = Handles.DoPositionHandle(pivotPoint, Quaternion.identity);
+
+        if (newPivotPoint != pivotPoint)
+        {
+            Vector3 displacement = newPivotPoint - pivotPoint;
+
+            component.segments[0].p1 += displacement;
+            for (int i = 0; i < component.segments.Length; ++i)
+            {
+                component.segments[i].p2 += displacement;
+            }
+        }
     }
 
     private void SetFreeSegments()
@@ -247,15 +270,15 @@ public class SplineEditor : Editor
         Vector3 LastP = Vector3.zero;
         Vector3 newP1 = Vector3.zero;
         Vector3 newP2 = Vector3.zero;
-        Vector3 newCenter = Vector3.zero;
+        //  Vector3 newCenter = Vector3.zero;
 
         float PI2 = Mathf.PI * ((demiCircle.boolValue) ? 1.0f : 2.0f);
         float DivPI2 = PI2 / ((close.boolValue) ? segments.arraySize : (segments.arraySize + 1));
 
         Quaternion eulerRot = Quaternion.Euler(rotation.vector3Value.x, rotation.vector3Value.y, rotation.vector3Value.z);
 
-        newCenter = DrawHandle(-1, "center", component.center, Quaternion.identity);//Handles.PositionHandle(component.Center, Quaternion.identity);
-        component.center = newCenter;
+        //newCenter = DrawHandle(-1, "center", pivotPoint, Quaternion.identity);//Handles.PositionHandle(component.Center, Quaternion.identity);
+        // component.center = newCenter;
 
         float dist = 0.0f;
 
@@ -263,7 +286,7 @@ public class SplineEditor : Editor
         {
             if (i == 0)
             {
-                newP1 = DrawHandle(i, i.ToString(), newCenter + eulerRot * new Vector3(Mathf.Cos(DivPI2 * i), Mathf.Sin(DivPI2 * i)) * _radius, Quaternion.identity);
+                newP1 = DrawHandle(i, i.ToString(), pivotPoint + eulerRot * new Vector3(Mathf.Cos(DivPI2 * i), Mathf.Sin(DivPI2 * i)) * _radius, Quaternion.identity);
 
                 component.segments[i].p1 = newP1;
             }
@@ -280,7 +303,7 @@ public class SplineEditor : Editor
             }
             else
             {
-                newP2 = DrawHandle(i, (i + 1).ToString(), newCenter + eulerRot * new Vector3(Mathf.Cos(DivPI2 * (i + 1)), Mathf.Sin(DivPI2 * (i + 1))) * _radius, Quaternion.identity);
+                newP2 = DrawHandle(i, (i + 1).ToString(), pivotPoint + eulerRot * new Vector3(Mathf.Cos(DivPI2 * (i + 1)), Mathf.Sin(DivPI2 * (i + 1))) * _radius, Quaternion.identity);
             }
 
             component.segments[i].p1length = dist;
@@ -359,7 +382,7 @@ public class SplineEditor : Editor
         currentDist = serializedObject.FindProperty("currentDist");
 
         circleShape = serializedObject.FindProperty("circleShape");
-        center = serializedObject.FindProperty("center");
+        //   center = serializedObject.FindProperty("center");
         demiCircle = serializedObject.FindProperty("demiCircle");
         radius = serializedObject.FindProperty("radius");
         rotation = serializedObject.FindProperty("rotation");
