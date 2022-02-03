@@ -5,7 +5,14 @@ using UnityEngine;
 
 public class SplineEditor : Editor
 {
-    //protected SerializedProperty center;
+    private enum SettingMode
+    {
+        none,
+        Edit,
+        Remove,
+        Add
+    }
+
     protected SerializedProperty demiCircle;
     protected SerializedProperty rotation;
     protected SerializedProperty currentDist;
@@ -25,8 +32,7 @@ public class SplineEditor : Editor
     protected List<int> idPointSelects;
 
     private Spline component;
-    private bool edit = false;
-    private bool add = false;
+    private SettingMode editSettingMode = SettingMode.none;
 
     public Spline Component { get => component; set => component = value; }
 
@@ -66,14 +72,12 @@ public class SplineEditor : Editor
 
     private void ShowPoints()
     {
-        // showPoints = EditorGUILayout.Foldout(showPoints, "Points");
-
-        /* if (showPoints)
-         {*/
         GUILayout.BeginHorizontal();
         GUILayout.BeginVertical("GroupBox");
 
         EditorGUILayout.LabelField("Edition", EditorStyles.boldLabel);
+
+        DisplayButtonsSettingMode();
 
         int newSize = EditorGUILayout.IntField("Number of points", segments.arraySize);
         if (newSize != segments.arraySize && newSize >= 0)
@@ -104,33 +108,11 @@ public class SplineEditor : Editor
                 }
             }
         }
-        /*    else
-            {
-                EditorGUILayout.PropertyField(center);
-            }*/
 
-        GUI.backgroundColor = (edit) ? Color.green : Color.white;
-        if (GUILayout.Button("Edit"))
-        {
-            edit = !edit;
-            add = false;
-            if (!edit)
-            {
-                DeselectPoints();
-            }
-        }
 
-        GUI.backgroundColor = (add) ? Color.green : Color.white;
-        if (GUILayout.Button("Add/Remove"))
-        {
-            edit = false;
-            DeselectPoints();
-            add = !add;
-        }
-        GUI.backgroundColor = Color.white;
+
         GUILayout.EndVertical();
         GUILayout.EndHorizontal();
-        //}
     }
 
     public virtual void OnSceneGUI()
@@ -146,8 +128,6 @@ public class SplineEditor : Editor
             Tools.current = Tool.None;
         else return;
 
-        MovePivot();
-
         if (useCatmullRom.boolValue)
         {
             DisplayCatmullRomSpline();
@@ -162,42 +142,64 @@ public class SplineEditor : Editor
             SetCircleSegments(radius.floatValue);
         }
 
-        if (add)
+        switch (editSettingMode)
         {
-            if (currentEvt.control && currentEvt.button == 0)
-            {
-                if (!RemovePoint())
-                {
+            case SettingMode.none:
+                MovePivot();
+                break;
+            case SettingMode.Edit:
+                break;
+            case SettingMode.Remove:
+                RemovePoint();
+                break;
+            case SettingMode.Add:
+                AddNewPoint();
+                break;
+        }
+        EditorGUI.EndChangeCheck();
+    }
 
+    private void DisplayButtonsSettingMode()
+    {
+        SettingMode mode = SettingMode.none;
+
+        GUILayout.BeginHorizontal();
+        for (int i = 0; i < 3; ++i)
+        {
+            mode++;
+            GUI.backgroundColor = (editSettingMode == mode) ? Color.green : Color.white;
+            if (GUILayout.Button(mode.ToString()))
+            {
+                if (editSettingMode != mode)
+                {
+                    DeselectPoints();
+                    editSettingMode = mode;
+                }
+                else
+                {
+                    editSettingMode = SettingMode.none;
                 }
             }
-            else
-            {
-                AddNewPoint();
-            }
+            GUI.backgroundColor = Color.white;
         }
 
-
-        EditorGUI.EndChangeCheck();
+        GUILayout.EndHorizontal();
     }
 
     private void MovePivot()
     {
-        if (!edit && !add)
+        Vector3 lastPosition = component.transform.position;
+
+        component.transform.position = Handles.DoPositionHandle(component.transform.position, Quaternion.identity);
+
+        if (lastPosition != component.transform.position)
         {
-            Vector3 lastPosition = component.transform.position;
+            Vector3 displacement = component.transform.position - lastPosition;
 
-            component.transform.position = Handles.DoPositionHandle(component.transform.position, Quaternion.identity);
-
-            if (lastPosition != component.transform.position)
+            component.segments[0].p1 += displacement;
+            for (int i = 0; i < component.segments.Length; ++i)
             {
-                Vector3 displacement = component.transform.position - lastPosition;
-
-                component.segments[0].p1 += displacement;
-                for (int i = 0; i < component.segments.Length; ++i)
-                {
-                    component.segments[i].p2 += displacement;
-                }
+                component.segments[i].p2 += displacement;
             }
         }
     }
@@ -266,15 +268,11 @@ public class SplineEditor : Editor
         Vector3 LastP = Vector3.zero;
         Vector3 newP1 = Vector3.zero;
         Vector3 newP2 = Vector3.zero;
-        //  Vector3 newCenter = Vector3.zero;
 
         float PI2 = Mathf.PI * ((demiCircle.boolValue) ? 1.0f : 2.0f);
         float DivPI2 = PI2 / ((close.boolValue) ? segments.arraySize : (segments.arraySize + 1));
 
         Quaternion eulerRot = Quaternion.Euler(rotation.vector3Value.x, rotation.vector3Value.y, rotation.vector3Value.z);
-
-        //newCenter = DrawHandle(-1, "center", pivotPoint, Quaternion.identity);//Handles.PositionHandle(component.Center, Quaternion.identity);
-        // component.center = newCenter;
 
         float dist = 0.0f;
 
@@ -351,7 +349,7 @@ public class SplineEditor : Editor
             Handles.color = color;
             if (Handles.Button((parent) ? parent.transform.TransformPoint(position) : position, Quaternion.identity, radiusHandle.floatValue, radiusHandle.floatValue, Handles.SphereHandleCap))
             {
-                if (edit)
+                if (editSettingMode == SettingMode.Edit)
                 {
                     if (currentEvt.modifiers != EventModifiers.Control)
                     {
@@ -378,7 +376,6 @@ public class SplineEditor : Editor
         currentDist = serializedObject.FindProperty("currentDist");
 
         circleShape = serializedObject.FindProperty("circleShape");
-        //   center = serializedObject.FindProperty("center");
         demiCircle = serializedObject.FindProperty("demiCircle");
         radius = serializedObject.FindProperty("radius");
         rotation = serializedObject.FindProperty("rotation");
@@ -400,6 +397,14 @@ public class SplineEditor : Editor
         else
         {
             idPointSelects.Clear();
+        }
+
+        if (component.segments == null)
+        {
+            component.segments = new Spline.Segment[1];
+            component.segments[0] = new Spline.Segment();
+            component.segments[0].p1 = component.transform.position;
+            component.segments[0].p2 = component.transform.position + Vector3.right;
         }
     }
 
@@ -593,11 +598,9 @@ public class SplineEditor : Editor
         }
         else
         {
-
             component.segments[component.segments.Length - 1] = new Spline.Segment();
             component.segments[component.segments.Length - 1].p1 = component.segments[component.segments.Length - 2].p2;
             component.segments[component.segments.Length - 1].p2 = position;
-
         }
 
         segments.arraySize = component.segments.Length;
@@ -641,6 +644,8 @@ public class SplineEditor : Editor
 
     private void RemovePoint(int id)
     {
+        if (id == 0) return;
+
         int length = component.segments.Length;
         int indexTmp = 0;
         Spline.Segment[] tmpArray = new Spline.Segment[length];
