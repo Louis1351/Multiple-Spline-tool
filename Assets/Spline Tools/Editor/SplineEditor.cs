@@ -76,7 +76,7 @@ public class SplineEditor : Editor
         // You'll need a control id to avoid messing with other tools!
         int controlID = GUIUtility.GetControlID(FocusType.Passive);
 
-        EditorGUI.BeginChangeCheck();
+        //EditorGUI.BeginChangeCheck();
 
         if (segments.arraySize > 0)
             Tools.current = Tool.None;
@@ -110,7 +110,7 @@ public class SplineEditor : Editor
                 AddNewPoint();
                 break;
         }
-        EditorGUI.EndChangeCheck();
+        //  EditorGUI.EndChangeCheck();
     }
 
     private void DisplayButtonsSettingMode()
@@ -137,6 +137,7 @@ public class SplineEditor : Editor
                 {
                     editSettingMode = SettingMode.none;
                 }
+                SceneView.RepaintAll();
             }
             GUI.backgroundColor = Color.white;
         }
@@ -147,18 +148,24 @@ public class SplineEditor : Editor
     private void MovePivot()
     {
         Vector3 lastPosition = component.transform.position;
+        Vector3 newPos = component.transform.position;
 
-        component.transform.position = Handles.DoPositionHandle(component.transform.position, Quaternion.identity);
+        EditorGUI.BeginChangeCheck();
+        newPos = Handles.DoPositionHandle(component.transform.position, Quaternion.identity);
 
-        if (lastPosition != component.transform.position)
+        if (EditorGUI.EndChangeCheck())
         {
-            Vector3 displacement = component.transform.position - lastPosition;
+            Undo.RecordObject(component.transform, "Move Pivot");
+            Undo.RecordObject(target, "Move Pivot");
+
+            Vector3 displacement = newPos - lastPosition;
 
             component.segments[0].p1 += displacement;
             for (int i = 0; i < component.segments.Length; ++i)
             {
                 component.segments[i].p2 += displacement;
             }
+            component.transform.position = newPos;
         }
     }
 
@@ -293,6 +300,7 @@ public class SplineEditor : Editor
 
         if (idPointSelects.Contains(id))
         {
+            EditorGUI.BeginChangeCheck();
             if (parent)
             {
                 Vector3 npos = Handles.PositionHandle(parent.TransformPoint(position), Quaternion.identity);
@@ -300,8 +308,30 @@ public class SplineEditor : Editor
             }
             else newPos = Handles.PositionHandle(position, Quaternion.identity);
 
-            if (snapToGrid.boolValue)
-                newPos = SnapToGrid(newPos);
+            if (newPos != position)
+            {
+                if (snapToGrid.boolValue)
+                    newPos = SnapToGrid(newPos);
+
+                Vector3 addOffset = newPos - position;
+
+                for (int i = 0; i < idPointSelects.Count; ++i)
+                {
+                    if (idPointSelects[i] != id)
+                    {
+                        if (idPointSelects[i] == -1)
+                            component.segments[0].p1 += addOffset;
+                        else
+                            component.segments[idPointSelects[i]].p2 += addOffset;
+                    }
+
+                }
+            }
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                Undo.RecordObject(component, "Move point " + id);
+            }
         }
         else
         {
@@ -476,20 +506,34 @@ public class SplineEditor : Editor
         GUILayout.BeginHorizontal();
         GUILayout.BeginVertical("GroupBox");
 
-        EditorGUILayout.LabelField("Edition", EditorStyles.boldLabel);
-
         DisplayButtonsSettingMode();
 
-        int newSize = EditorGUILayout.IntField("Number of points", segments.arraySize);
-        newSize = Mathf.Max(newSize, 1);
-
+        EditorGUILayout.LabelField("Edition", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(snapToGrid);
 
-        if (newSize != segments.arraySize && newSize >= 0)
-            segments.arraySize = newSize;
+
+        /*  EditorGUI.BeginChangeCheck();
+          int newSize = EditorGUILayout.IntField("Number of points", segments.arraySize);
+          newSize = Mathf.Max(newSize, 1);
+
+          if (EditorGUI.EndChangeCheck())
+          {
+              Undo.RecordObject(component, "Changed Number of points" + newSize);
+
+              if (newSize >= 0)
+                  segments.arraySize = newSize;
+          }*/
+
+
+
 
         if (!circleShape.boolValue)
         {
+            if (idPointSelects != null && idPointSelects.Count > 0)
+            {
+                EditorGUILayout.LabelField("Selected Points", EditorStyles.boldLabel);
+            }
+
             SerializedProperty item;
             SerializedProperty p1;
             SerializedProperty p2;
@@ -564,6 +608,8 @@ public class SplineEditor : Editor
 
     private void AddPoint(Vector3 position, int segmentID)
     {
+        Undo.RecordObject(component, "Add new Point ");
+
         int length = component.segments.Length;
 
         Spline.Segment[] tmpArray = new Spline.Segment[length];
@@ -596,6 +642,8 @@ public class SplineEditor : Editor
 
     private void AddPoint(Vector3 position)
     {
+        Undo.RecordObject(component, "Add new Point ");
+
         System.Array.Resize(ref component.segments, component.segments.Length + 1);
 
         if (close.boolValue)
@@ -656,8 +704,12 @@ public class SplineEditor : Editor
     {
         if (id == 0) return;
 
+
         int length = component.segments.Length;
         int indexTmp = 0;
+
+        Undo.RecordObject(component, "Remove Point " + id);
+
         Spline.Segment[] tmpArray = new Spline.Segment[length];
         System.Array.Copy(component.segments, tmpArray, length);
 
@@ -681,6 +733,8 @@ public class SplineEditor : Editor
             }
             indexTmp++;
         }
+
+
 
         SceneView.RepaintAll();
     }
