@@ -9,8 +9,8 @@ public class SplineEditor : Editor
     {
         none,
         Edit,
-        Remove,
-        Add
+        Add,
+        Remove
     }
 
     protected SerializedProperty demiCircle;
@@ -21,6 +21,7 @@ public class SplineEditor : Editor
 
     protected SerializedProperty useCatmullRom;
     protected SerializedProperty close;
+    protected SerializedProperty snapToGrid;
 
     protected SerializedProperty circleShape;
     protected bool oldClose;
@@ -33,17 +34,16 @@ public class SplineEditor : Editor
 
     private Spline component;
     private SettingMode editSettingMode = SettingMode.none;
+    private Texture[] textures;
 
     public Spline Component { get => component; set => component = value; }
 
     public virtual void OnEnable()
     {
-        //  CreateColliderObjects();
         oldClose = close.boolValue;
     }
     private void OnDisable()
     {
-        //    CleanColliderObjects();
     }
     public override void OnInspectorGUI()
     {
@@ -67,52 +67,6 @@ public class SplineEditor : Editor
                 p2.vector3Value = component.transform.position;
             }
         }
-    }
-
-
-    private void ShowPoints()
-    {
-        GUILayout.BeginHorizontal();
-        GUILayout.BeginVertical("GroupBox");
-
-        EditorGUILayout.LabelField("Edition", EditorStyles.boldLabel);
-
-        DisplayButtonsSettingMode();
-
-        int newSize = EditorGUILayout.IntField("Number of points", segments.arraySize);
-        if (newSize != segments.arraySize && newSize >= 0)
-            segments.arraySize = newSize;
-
-        if (!circleShape.boolValue)
-        {
-            SerializedProperty item;
-            SerializedProperty p1;
-            SerializedProperty p2;
-
-            for (int i = 0; i < segments.arraySize; ++i)
-            {
-                if (close.boolValue && i == segments.arraySize - 1)
-                    break;
-
-                item = segments.GetArrayElementAtIndex(i);
-                p1 = item.FindPropertyRelative("p1");
-                p2 = item.FindPropertyRelative("p2");
-
-                if (idPointSelects.Contains(-1) && i == 0)
-                {
-                    p1.vector3Value = EditorGUILayout.Vector3Field("point " + i, p1.vector3Value);
-                }
-                if (idPointSelects.Contains(i))
-                {
-                    p2.vector3Value = EditorGUILayout.Vector3Field("point " + (i + 1), p2.vector3Value);
-                }
-            }
-        }
-
-
-
-        GUILayout.EndVertical();
-        GUILayout.EndHorizontal();
     }
 
     public virtual void OnSceneGUI()
@@ -163,16 +117,20 @@ public class SplineEditor : Editor
     {
         SettingMode mode = SettingMode.none;
 
+        Rect rect = new Rect(10, 10, 100, 40);
         GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
         for (int i = 0; i < 3; ++i)
         {
+
             mode++;
+
             GUI.backgroundColor = (editSettingMode == mode) ? Color.green : Color.white;
-            if (GUILayout.Button(mode.ToString()))
+            if (GUILayout.Button(textures[i], GUILayout.Width(40.0f), GUILayout.Height(40.0f)))
             {
+                DeselectPoints();
                 if (editSettingMode != mode)
                 {
-                    DeselectPoints();
                     editSettingMode = mode;
                 }
                 else
@@ -182,7 +140,7 @@ public class SplineEditor : Editor
             }
             GUI.backgroundColor = Color.white;
         }
-
+        GUILayout.FlexibleSpace();
         GUILayout.EndHorizontal();
     }
 
@@ -335,17 +293,18 @@ public class SplineEditor : Editor
 
         if (idPointSelects.Contains(id))
         {
-
             if (parent)
             {
                 Vector3 npos = Handles.PositionHandle(parent.TransformPoint(position), Quaternion.identity);
                 newPos = parent.InverseTransformPoint(npos);
             }
             else newPos = Handles.PositionHandle(position, Quaternion.identity);
+
+            if (snapToGrid.boolValue)
+                newPos = SnapToGrid(newPos);
         }
         else
         {
-
             Handles.color = color;
             if (Handles.Button((parent) ? parent.transform.TransformPoint(position) : position, Quaternion.identity, radiusHandle.floatValue, radiusHandle.floatValue, Handles.SphereHandleCap))
             {
@@ -364,6 +323,7 @@ public class SplineEditor : Editor
                 }
             }
         }
+
         Handles.Label((parent) ? parent.TransformPoint(position) : position + Vector3.up * radiusHandle.floatValue * 2.0f, name, style);
 
         return newPos;
@@ -385,10 +345,13 @@ public class SplineEditor : Editor
         useCatmullRom = serializedObject.FindProperty("useCatmullRom");
 
         close = serializedObject.FindProperty("close");
+        snapToGrid = serializedObject.FindProperty("snapToGrid");
 
         radiusHandle = serializedObject.FindProperty("radiusHandle");
         colorHandle = serializedObject.FindProperty("colorHandle");
         selectionColorHandle = serializedObject.FindProperty("selectionColorHandle");
+
+        textures = Resources.LoadAll<Texture>("SplineTextures");
 
         if (idPointSelects == null)
         {
@@ -497,12 +460,59 @@ public class SplineEditor : Editor
         EditorGUILayout.PropertyField(close);
         EditorGUILayout.PropertyField(circleShape);
 
-        ShowPoints();
+        DisplayEditionOptions();
 
         if (circleShape.boolValue)
             DisplayCircleOptions();
 
         DisplayDebugOptions();
+
+        GUILayout.EndVertical();
+        GUILayout.EndHorizontal();
+    }
+
+    private void DisplayEditionOptions()
+    {
+        GUILayout.BeginHorizontal();
+        GUILayout.BeginVertical("GroupBox");
+
+        EditorGUILayout.LabelField("Edition", EditorStyles.boldLabel);
+
+        DisplayButtonsSettingMode();
+
+        int newSize = EditorGUILayout.IntField("Number of points", segments.arraySize);
+        newSize = Mathf.Max(newSize, 1);
+
+        EditorGUILayout.PropertyField(snapToGrid);
+
+        if (newSize != segments.arraySize && newSize >= 0)
+            segments.arraySize = newSize;
+
+        if (!circleShape.boolValue)
+        {
+            SerializedProperty item;
+            SerializedProperty p1;
+            SerializedProperty p2;
+
+            for (int i = 0; i < segments.arraySize; ++i)
+            {
+                if (close.boolValue && i == segments.arraySize - 1)
+                    break;
+
+                item = segments.GetArrayElementAtIndex(i);
+                p1 = item.FindPropertyRelative("p1");
+                p2 = item.FindPropertyRelative("p2");
+
+                if (idPointSelects.Contains(-1) && i == 0)
+                {
+                    p1.vector3Value = EditorGUILayout.Vector3Field("point " + i, p1.vector3Value);
+                }
+                if (idPointSelects.Contains(i))
+                {
+                    p2.vector3Value = EditorGUILayout.Vector3Field("point " + (i + 1), p2.vector3Value);
+                }
+            }
+        }
 
         GUILayout.EndVertical();
         GUILayout.EndHorizontal();
@@ -766,6 +776,7 @@ public class SplineEditor : Editor
 
         return findSomething;
     }
+
     private void AddNewPoint()
     {
         int segmentID = 0;
@@ -787,6 +798,10 @@ public class SplineEditor : Editor
 
                 Ray ray = HandleUtility.GUIPointToWorldRay(currentEvt.mousePosition);
                 Vector3 newPosition = ray.GetPoint((currentCam.transform.position - component.segments[component.segments.Length - 1].p2).magnitude);
+
+                if (snapToGrid.boolValue)
+                    newPosition = SnapToGrid(newPosition);
+
                 Vector3 visualPosition = (parent) ? parent.TransformPoint(newPosition) : newPosition;
 
                 Handles.color = selectionColorHandle.colorValue;
@@ -800,6 +815,7 @@ public class SplineEditor : Editor
                 {
                     Handles.DrawDottedLine(component.segments[component.segments.Length - 1].p2, visualPosition, 5.0f);
                 }
+
                 Handles.SphereHandleCap(0, visualPosition, Quaternion.identity, radiusHandle.floatValue, EventType.Repaint);
                 Handles.color = colorHandle.colorValue;
 
@@ -812,5 +828,12 @@ public class SplineEditor : Editor
                 SceneView.RepaintAll();
             }
         }
+    }
+
+    private Vector3 SnapToGrid(Vector3 position)
+    {
+        return new Vector3(Mathf.Round(position.x),
+                             Mathf.Round(position.y),
+                             Mathf.Round(position.z));
     }
 }
