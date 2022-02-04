@@ -153,7 +153,8 @@ public class Spline : MonoBehaviour
     protected Color selectionColorHandle = Color.yellow;
     [SerializeField]
     protected Color colorHandle = Color.white;
-    //protected Vector3 currentDir = Vector3.zero;
+    [SerializeField]
+    protected bool showIndex = true;
 
 #pragma warning restore 414
 

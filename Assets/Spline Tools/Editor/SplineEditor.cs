@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class SplineEditor : Editor
 {
-    private enum SettingMode
+    protected enum SettingMode
     {
         none,
         Edit,
@@ -30,10 +30,11 @@ public class SplineEditor : Editor
     protected SerializedProperty radiusHandle;
     protected SerializedProperty selectionColorHandle;
     protected SerializedProperty colorHandle;
+    protected SerializedProperty showIndex;
     protected List<int> idPointSelects;
 
     private Spline component;
-    private SettingMode editSettingMode = SettingMode.none;
+    protected SettingMode editSettingMode = SettingMode.none;
     private Texture[] textures;
 
     public Spline Component { get => component; set => component = value; }
@@ -354,7 +355,8 @@ public class SplineEditor : Editor
             }
         }
 
-        Handles.Label((parent) ? parent.TransformPoint(position) : position + Vector3.up * radiusHandle.floatValue * 2.0f, name, style);
+        if (showIndex.boolValue)
+            Handles.Label((parent) ? parent.TransformPoint(position) : position + Vector3.up * radiusHandle.floatValue * 2.0f, name, style);
 
         return newPos;
     }
@@ -380,6 +382,7 @@ public class SplineEditor : Editor
         radiusHandle = serializedObject.FindProperty("radiusHandle");
         colorHandle = serializedObject.FindProperty("colorHandle");
         selectionColorHandle = serializedObject.FindProperty("selectionColorHandle");
+        showIndex = serializedObject.FindProperty("showIndex");
 
         textures = Resources.LoadAll<Texture>("SplineTextures");
 
@@ -602,6 +605,7 @@ public class SplineEditor : Editor
         EditorGUILayout.PropertyField(radiusHandle);
         EditorGUILayout.PropertyField(colorHandle);
         EditorGUILayout.PropertyField(selectionColorHandle);
+        EditorGUILayout.PropertyField(showIndex);
         GUILayout.EndVertical();
         GUILayout.EndHorizontal();
     }
