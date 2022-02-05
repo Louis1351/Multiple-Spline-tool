@@ -66,7 +66,7 @@ public class Movable3DObject : Spline
         }
         set => speed = value;
     }
-   
+
     /* public Vector3 CurrentDir
      {
          get
@@ -216,12 +216,15 @@ public class Movable3DObject : Spline
                 }
             }
 
-            GetPositionAtDistance(target, out Vector3 position, out Vector3 dir, currentDist);
+            GetPositionAtDistance(target, out Vector3 position, out Vector3 dir, out float angle, currentDist);
 
             target.localPosition = position;
 
             if (isChangingDirection && dir != Vector3.zero)
+            {
                 target.forward = dir;
+                target.Rotate(dir, angle, Space.World);
+            }
         }
     }
 
@@ -254,12 +257,15 @@ public class Movable3DObject : Spline
                 }
             }
 
-            GetPositionAtDistance(target, out Vector3 position, out Vector3 dir, currentDist);
+            GetPositionAtDistance(target, out Vector3 position, out Vector3 dir, out float angle, currentDist);
 
             target.localPosition = position;
 
             if (isChangingDirection && dir != Vector3.zero)
+            {
                 target.forward = dir;
+                target.Rotate(dir, angle, Space.World);
+            }
         }
     }
 

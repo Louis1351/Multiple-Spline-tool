@@ -54,13 +54,16 @@ public class Movable3DObjectEditor : SplineEditor
 
             if (currentTarget)
             {
-                componentTarget.GetPositionAtDistance(currentTarget, out Vector3 position, out Vector3 dir, currentDist.floatValue);
+                componentTarget.GetPositionAtDistance(currentTarget, out Vector3 position, out Vector3 dir, out float angle, currentDist.floatValue);
                 currentTarget.position = position;
 
                 if (isChangingDirection.boolValue)
                 {
                     if (dir != Vector3.zero)
+                    {
                         currentTarget.transform.forward = dir;
+                        currentTarget.Rotate(dir, angle, Space.World);
+                    }
                 }
             }
 
@@ -80,13 +83,16 @@ public class Movable3DObjectEditor : SplineEditor
 
             if (currentTarget)
             {
-                componentTarget.GetPositionAtDistance(currentTarget, out Vector3 position, out Vector3 dir, currentDist.floatValue);
+                componentTarget.GetPositionAtDistance(currentTarget, out Vector3 position, out Vector3 dir, out float angle, currentDist.floatValue);
                 currentTarget.position = position;
 
                 if (isChangingDirection.boolValue)
                 {
                     if (dir != Vector3.zero)
+                    {
                         currentTarget.transform.forward = dir;
+                        currentTarget.Rotate(dir, angle, Space.World);
+                    }
                 }
             }
 
@@ -123,7 +129,7 @@ public class Movable3DObjectEditor : SplineEditor
         GUILayout.BeginVertical("GroupBox");
 
         EditorGUILayout.PropertyField(targetObject);
-        
+
         DisplayMovement();
         DisplayVelocity();
         DisplayTransformOptions();

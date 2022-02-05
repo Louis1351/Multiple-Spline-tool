@@ -107,6 +107,8 @@ public class Spline : MonoBehaviour
         public Vector3 p1;
         public Vector3 p2;
         public Vector3 dir;
+        public float angleP1 = 0.0f;
+        public float angleP2 = 0.0f;
         public float length = 0.0f;
         public float p1length = 0.0f;
         public float p2length = 0.0f;
@@ -123,6 +125,8 @@ public class Spline : MonoBehaviour
             this.length = segment.length;
             this.p1length = segment.p1length;
             this.p2length = segment.p2length;
+            this.angleP1 = segment.angleP1;
+            this.angleP2 = segment.angleP2;
         }
     }
 
@@ -292,17 +296,19 @@ public class Spline : MonoBehaviour
         }
         return transform.localPosition;
     }
-    public void GetPositionAtTime(Transform transform, out Vector3 position, out Vector3 direction, float _time)
+    public void GetPositionAtTime(Transform transform, out Vector3 position, out Vector3 direction, out float angle, float _time)
     {
-        GetPositionAtDistance(transform, out position, out direction, GetCurrentDistance(_time));
+        GetPositionAtDistance(transform, out position, out direction, out angle, GetCurrentDistance(_time));
     }
-    public void GetPositionAtDistance(Transform transform, out Vector3 position, out Vector3 direction, float _dist)
+    public void GetPositionAtDistance(Transform transform, out Vector3 position, out Vector3 direction, out float angle, float _dist)
     {
         float dist = Mathf.Clamp(_dist, 0.0f, segments[segments.Length - 1].p2length);
         float t = 0.0f;
+        angle = 0.0f;
 
         position = transform.localPosition;
         direction = transform.forward;
+
 
         for (int i = 0; i < segments.Length; ++i)
         {
@@ -354,11 +360,15 @@ public class Spline : MonoBehaviour
                     }
 
                     direction = (position - transform.position);
+
+                    angle = segments[i].angleP1 + ((segments[i].angleP1 < segments[i].angleP2) ? (segments[i].angleP1 - segments[i].angleP2) : (segments[i].angleP2 - segments[i].angleP1)) * t;
                 }
                 else
                 {
                     position = Vector3.Lerp(segments[i].p1, segments[i].p2, t);
                     direction = segments[i].dir;
+
+                    angle = segments[i].angleP1 + ((segments[i].angleP1 < segments[i].angleP2) ? (segments[i].angleP1 - segments[i].angleP2) : (segments[i].angleP2 - segments[i].angleP1)) * t;
                 }
             }
         }

@@ -176,6 +176,7 @@ public class SplineEditor : Editor
         Vector3 LastP = Vector3.zero;
         Vector3 newP1 = Vector3.zero;
         Vector3 newP2 = Vector3.zero;
+        Vector3 normal = Vector3.zero;
 
         float dist = 0.0f;
         for (int i = 0; i < component.segments.Length; ++i)
@@ -195,11 +196,15 @@ public class SplineEditor : Editor
                     break;
 
                 component.segments[i].p1 = newP1;
+
+                if (i - 1 >= 0)
+                    component.segments[i].angleP1 = component.segments[i - 1].angleP2;
             }
 
             if (close.boolValue && i == segments.arraySize - 1)
             {
                 newP2 = component.segments[0].p1;
+                component.segments[i].angleP2 = component.segments[0].angleP1;
             }
             else
             {
@@ -418,7 +423,8 @@ public class SplineEditor : Editor
         Transform parent = component.transform.parent;
         //The start position of the line
         Vector3 lastPos = component.segments[component.segments.ClampListPos(pos)].p1;
-
+      //  Vector3 normal = Vector3.zero;
+      //  float angle = 0.0f;
         //The spline's resolution
         //Make sure it's is adding up to 1, so 0.3 will give a gap, but 0.2 will work
         float resolution = 0.1f;
@@ -474,9 +480,23 @@ public class SplineEditor : Editor
                 Handles.DrawLine(parent.TransformPoint(lastPos), parent.TransformPoint(newPos));
             }
             else Handles.DrawLine(lastPos, newPos);
+
+         /*   if (component.segments[pos].angleP1 < component.segments[pos].angleP2)
+                angle = Mathf.Lerp(component.segments[pos].angleP1, component.segments[pos].angleP2, t);
+            else
+                angle = Mathf.Lerp(component.segments[pos].angleP2, component.segments[pos].angleP1, t);*/
+
+            /*Vector3 dir = (newPos - lastPos);
+
+            normal = transform.TransformDirection(Vector3(0, -1, 0)); ;*/
+
+          //  Handles.DrawLine(newPos, newPos + normal * 0.5f);
+
             Handles.color = Color.white;
             //Save this pos so we can draw the next line segment
             lastPos = newPos;
+
+
         }
     }
 
@@ -540,6 +560,8 @@ public class SplineEditor : Editor
             SerializedProperty item;
             SerializedProperty p1;
             SerializedProperty p2;
+            SerializedProperty angleP1;
+            SerializedProperty angleP2;
 
             for (int i = 0; i < segments.arraySize; ++i)
             {
@@ -549,14 +571,24 @@ public class SplineEditor : Editor
                 item = segments.GetArrayElementAtIndex(i);
                 p1 = item.FindPropertyRelative("p1");
                 p2 = item.FindPropertyRelative("p2");
+                angleP1 = item.FindPropertyRelative("angleP1");
+                angleP2 = item.FindPropertyRelative("angleP2");
 
                 if (idPointSelects.Contains(-1) && i == 0)
                 {
-                    p1.vector3Value = EditorGUILayout.Vector3Field("point " + i, p1.vector3Value);
+                    GUILayout.BeginVertical("GroupBox");
+                    EditorGUILayout.LabelField("Point " + i, EditorStyles.boldLabel);
+                    p1.vector3Value = EditorGUILayout.Vector3Field("position", p1.vector3Value);
+                    angleP1.floatValue = EditorGUILayout.FloatField("rotation ", angleP1.floatValue);
+                    GUILayout.EndVertical();
                 }
                 if (idPointSelects.Contains(i))
                 {
-                    p2.vector3Value = EditorGUILayout.Vector3Field("point " + (i + 1), p2.vector3Value);
+                    GUILayout.BeginVertical("GroupBox");
+                    EditorGUILayout.LabelField("Point " + (i + 1), EditorStyles.boldLabel);
+                    p2.vector3Value = EditorGUILayout.Vector3Field("position", p2.vector3Value);
+                    angleP2.floatValue = EditorGUILayout.FloatField("rotation ", angleP2.floatValue);
+                    GUILayout.EndVertical();
                 }
             }
         }
