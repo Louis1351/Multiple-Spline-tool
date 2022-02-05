@@ -54,6 +54,8 @@ public class PipeMeshGenerator : Spline
 
         ///Set Vertices
         Vector3[] vertices = new Vector3[nbVerticeID + 2];
+        Vector2[] uvs = new Vector2[nbVerticeID + 2];
+
         int vertID = 0;
         float PI2 = Mathf.PI * 2;
         float div = PI2 / nbQuad;
@@ -73,6 +75,7 @@ public class PipeMeshGenerator : Spline
             float step = 0;
             for (int j = 0; j < nbQuad; ++j)
             {
+                uvs[vertID] = new Vector2((j / (float)(nbQuad - 1)), (i / (float)(segments.Length - 1)));
                 vertices[vertID] = ((i >= segments.Length) ? segments[i - 1].p2 : segments[i].p1) + rot * new Vector3(Mathf.Sin(step), Mathf.Cos(step), 0.0f) * width;
                 vertID++;
                 step += div;
@@ -158,6 +161,7 @@ public class PipeMeshGenerator : Spline
 
         meshFilter.sharedMesh.name = "pipe";
         meshFilter.sharedMesh.vertices = vertices;
+        meshFilter.sharedMesh.uv = uvs;
 
         meshFilter.sharedMesh.SetTriangles(mainTriangles, 0);
         meshFilter.sharedMesh.SetTriangles(startConnector, 1);
@@ -206,6 +210,8 @@ public class PipeMeshGenerator : Spline
 
         ///Set Vertices
         Vector3[] vertices = new Vector3[nbVerticeID + 2];
+        Vector2[] uvs = new Vector2[nbVerticeID + 2];
+
         int vertID = 0;
         float PI2 = Mathf.PI * 2;
         float div = PI2 / nbQuad;
@@ -230,6 +236,7 @@ public class PipeMeshGenerator : Spline
             float step = 0;
             for (int j = 0; j < nbQuad; ++j)
             {
+                uvs[vertID] = new Vector2((j / (float)(nbQuad - 1)), (i / (float)(points.Count - 1)));
                 vertices[vertID] = points[i] + rot * new Vector3(Mathf.Sin(step), Mathf.Cos(step), 0.0f) * width;
                 vertID++;
                 step += div;
@@ -316,6 +323,7 @@ public class PipeMeshGenerator : Spline
 
         meshFilter.sharedMesh.name = "pipe";
         meshFilter.sharedMesh.vertices = vertices;
+        meshFilter.sharedMesh.uv = uvs;
 
         meshFilter.sharedMesh.SetTriangles(mainTriangles, 0);
         meshFilter.sharedMesh.SetTriangles(startConnector, 1);
