@@ -17,6 +17,8 @@ public class PipeMeshGenerator : Spline
     [Tooltip("Set Catmull Rom Precision")]
     [SerializeField]
     private float catmullRomStep = 1.0f;
+    [SerializeField]
+    private bool closePipe = false;
 
 #pragma warning disable 414
     [Tooltip("Generate the spline each modification.")]
@@ -43,7 +45,11 @@ public class PipeMeshGenerator : Spline
         MeshRenderer meshRenderer = go.AddComponent<MeshRenderer>();
 
         go.transform.SetParent(transform);
-        meshRenderer.materials = materials;
+
+        if (closePipe)
+            meshRenderer.materials = materials;
+        else
+            meshRenderer.material = materials[0];
 
 
         int nbVerticeID = ((nbQuad) * (segments.Length + 1));
@@ -53,8 +59,10 @@ public class PipeMeshGenerator : Spline
          Debug.Log(nbTriangleID);*/
 
         ///Set Vertices
-        Vector3[] vertices = new Vector3[nbVerticeID + 2];
-        Vector2[] uvs = new Vector2[nbVerticeID + 2];
+        int nbCloseVertices = (closePipe) ? 2 : 0;
+
+        Vector3[] vertices = new Vector3[nbVerticeID + nbCloseVertices];
+        Vector2[] uvs = new Vector2[nbVerticeID + nbCloseVertices];
 
         int vertID = 0;
         float PI2 = Mathf.PI * 2;
@@ -81,8 +89,12 @@ public class PipeMeshGenerator : Spline
                 step += div;
             }
         }
-        vertices[nbVerticeID] = segments[0].p1;
-        vertices[nbVerticeID + 1] = segments[segments.Length - 1].p2;
+
+        if (closePipe)
+        {
+            vertices[nbVerticeID] = segments[0].p1;
+            vertices[nbVerticeID + 1] = segments[segments.Length - 1].p2;
+        }
 
         ///Set triangles
         int[] mainTriangles = new int[nbTriangleID];
@@ -127,45 +139,51 @@ public class PipeMeshGenerator : Spline
             createQuad++;
         }
 
-
         nbTriangleID = nbQuad * 6;
-
         int[] startConnector = new int[nbTriangleID];
-        triID = 0;
-
-        for (int i = 0; i < nbQuad; ++i)
-        {
-            startConnector[triID] = i;
-            triID++;
-            startConnector[triID] = (i + 1) % nbQuad;
-            triID++;
-            startConnector[triID] = vertices.Length - 2;
-            triID++;
-        }
-
         int[] endConnector = new int[nbTriangleID];
-        triID = 0;
 
-        for (int i = (vertices.Length - 2 - nbQuad); i < vertices.Length - 2; ++i)
+        if (closePipe)
         {
-            endConnector[triID] = vertices.Length - 1;
-            triID++;
-            endConnector[triID] = (i + 1 >= vertices.Length - 2) ? (vertices.Length - 2 - nbQuad) : (i + 1);
-            triID++;
-            endConnector[triID] = i;
-            triID++;
+            triID = 0;
+
+            for (int i = 0; i < nbQuad; ++i)
+            {
+                startConnector[triID] = i;
+                triID++;
+                startConnector[triID] = (i + 1) % nbQuad;
+                triID++;
+                startConnector[triID] = vertices.Length - 2;
+                triID++;
+            }
+
+            triID = 0;
+
+            for (int i = (vertices.Length - 2 - nbQuad); i < vertices.Length - 2; ++i)
+            {
+                endConnector[triID] = vertices.Length - 1;
+                triID++;
+                endConnector[triID] = (i + 1 >= vertices.Length - 2) ? (vertices.Length - 2 - nbQuad) : (i + 1);
+                triID++;
+                endConnector[triID] = i;
+                triID++;
+            }
         }
 
         meshFilter.sharedMesh = new Mesh();
-        meshFilter.sharedMesh.subMeshCount = 3;
+        meshFilter.sharedMesh.subMeshCount = (closePipe) ? 3 : 1;
 
         meshFilter.sharedMesh.name = "pipe";
         meshFilter.sharedMesh.vertices = vertices;
         meshFilter.sharedMesh.uv = uvs;
 
         meshFilter.sharedMesh.SetTriangles(mainTriangles, 0);
-        meshFilter.sharedMesh.SetTriangles(startConnector, 1);
-        meshFilter.sharedMesh.SetTriangles(endConnector, 2);
+
+        if (closePipe)
+        {
+            meshFilter.sharedMesh.SetTriangles(startConnector, 1);
+            meshFilter.sharedMesh.SetTriangles(endConnector, 2);
+        }
 
         meshFilter.sharedMesh.RecalculateBounds();
         meshFilter.sharedMesh.RecalculateNormals();
@@ -199,7 +217,11 @@ public class PipeMeshGenerator : Spline
         MeshRenderer meshRenderer = go.AddComponent<MeshRenderer>();
 
         go.transform.SetParent(transform);
-        meshRenderer.materials = materials;
+        
+        if (closePipe)
+            meshRenderer.materials = materials;
+        else
+            meshRenderer.material = materials[0];
 
 
         int nbVerticeID = ((nbQuad) * (points.Count));
@@ -209,8 +231,10 @@ public class PipeMeshGenerator : Spline
          Debug.Log(nbTriangleID);*/
 
         ///Set Vertices
-        Vector3[] vertices = new Vector3[nbVerticeID + 2];
-        Vector2[] uvs = new Vector2[nbVerticeID + 2];
+        int nbCloseVertices = (closePipe) ? 2 : 0;
+
+        Vector3[] vertices = new Vector3[nbVerticeID + nbCloseVertices];
+        Vector2[] uvs = new Vector2[nbVerticeID + nbCloseVertices];
 
         int vertID = 0;
         float PI2 = Mathf.PI * 2;
@@ -243,8 +267,11 @@ public class PipeMeshGenerator : Spline
             }
         }
 
-        vertices[nbVerticeID] = segments[0].p1;
-        vertices[nbVerticeID + 1] = points[points.Count - 1];
+        if (closePipe)
+        {
+            vertices[nbVerticeID] = segments[0].p1;
+            vertices[nbVerticeID + 1] = points[points.Count - 1];
+        }
 
 
         ///Set triangles
@@ -291,43 +318,50 @@ public class PipeMeshGenerator : Spline
         }
 
         nbTriangleID = nbQuad * 6;
-
         int[] startConnector = new int[nbTriangleID];
-        triID = 0;
-
-        for (int i = 0; i < nbQuad; ++i)
-        {
-            startConnector[triID] = i;
-            triID++;
-            startConnector[triID] = (i + 1) % nbQuad;
-            triID++;
-            startConnector[triID] = vertices.Length - 2;
-            triID++;
-        }
-
         int[] endConnector = new int[nbTriangleID];
-        triID = 0;
 
-        for (int i = (vertices.Length - 2 - nbQuad); i < vertices.Length - 2; ++i)
+        if (closePipe)
         {
-            endConnector[triID] = vertices.Length - 1;
-            triID++;
-            endConnector[triID] = (i + 1 >= vertices.Length - 2) ? (vertices.Length - 2 - nbQuad) : (i + 1);
-            triID++;
-            endConnector[triID] = i;
-            triID++;
+            triID = 0;
+
+            for (int i = 0; i < nbQuad; ++i)
+            {
+                startConnector[triID] = i;
+                triID++;
+                startConnector[triID] = (i + 1) % nbQuad;
+                triID++;
+                startConnector[triID] = vertices.Length - 2;
+                triID++;
+            }
+
+
+            triID = 0;
+
+            for (int i = (vertices.Length - 2 - nbQuad); i < vertices.Length - 2; ++i)
+            {
+                endConnector[triID] = vertices.Length - 1;
+                triID++;
+                endConnector[triID] = (i + 1 >= vertices.Length - 2) ? (vertices.Length - 2 - nbQuad) : (i + 1);
+                triID++;
+                endConnector[triID] = i;
+                triID++;
+            }
         }
 
         meshFilter.sharedMesh = new Mesh();
-        meshFilter.sharedMesh.subMeshCount = 3;
+        meshFilter.sharedMesh.subMeshCount = (closePipe) ? 3 : 1;
 
         meshFilter.sharedMesh.name = "pipe";
         meshFilter.sharedMesh.vertices = vertices;
         meshFilter.sharedMesh.uv = uvs;
 
         meshFilter.sharedMesh.SetTriangles(mainTriangles, 0);
-        meshFilter.sharedMesh.SetTriangles(startConnector, 1);
-        meshFilter.sharedMesh.SetTriangles(endConnector, 2);
+        if (closePipe)
+        {
+            meshFilter.sharedMesh.SetTriangles(startConnector, 1);
+            meshFilter.sharedMesh.SetTriangles(endConnector, 2);
+        }
 
         meshFilter.sharedMesh.RecalculateBounds();
         meshFilter.sharedMesh.RecalculateNormals();

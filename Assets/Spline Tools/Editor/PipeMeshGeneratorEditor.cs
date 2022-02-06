@@ -12,6 +12,7 @@ public class PipeMeshGeneratorEditor : SplineEditor
     private SerializedProperty width;
     private SerializedProperty materials;
     private SerializedProperty catmullRomStep;
+    private SerializedProperty closePipe;
     private SerializedProperty autoGenerate;
 
     void OnAwake()
@@ -91,6 +92,7 @@ public class PipeMeshGeneratorEditor : SplineEditor
             EditorGUILayout.PropertyField(catmullRomStep);
         EditorGUILayout.PropertyField(width);
 
+        EditorGUILayout.PropertyField(closePipe);
 
         GUILayout.EndVertical();
         GUILayout.EndHorizontal();
@@ -142,6 +144,7 @@ public class PipeMeshGeneratorEditor : SplineEditor
         nbQuad = serializedObject.FindProperty("nbQuad");
         width = serializedObject.FindProperty("width");
         materials = serializedObject.FindProperty("materials");
+        closePipe = serializedObject.FindProperty("closePipe");
 
         catmullRomStep = serializedObject.FindProperty("catmullRomStep");
         autoGenerate = serializedObject.FindProperty("autoGenerate");
