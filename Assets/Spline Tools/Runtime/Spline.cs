@@ -131,41 +131,61 @@ public class Spline : MonoBehaviour
     }
 
 #pragma warning disable 414
+    [Tooltip("segments array (each segment sets by two points)")]
     [SerializeField]
     public Segment[] segments = null;
+    [Tooltip("using the Catmull-Rom Algorithm (blue spline)")]
     [SerializeField]
     protected bool useCatmullRom = false;
+    [Tooltip("To close the spline")]
     [SerializeField]
     protected bool close = false;
+    [Tooltip("Change an circle to semi-circle ")]
     [SerializeField]
-    protected bool demiCircle = false;
-
+    protected bool semiCircle = false;
+    [Tooltip("To snap point to grid")]
     [SerializeField]
     protected bool snapToGrid = false;
-
+    [Tooltip("Circle's radius")]
     [SerializeField]
     protected float radius = 0.0f;
+    [Tooltip("Circle's rotation")]
     [SerializeField]
     protected Vector3 rotation = Vector3.zero;
+
     [SerializeField]
     protected float currentDist = 0.0f;
+    [Tooltip("Change spline path to a circle path")]
     [SerializeField]
     protected bool circleShape = false;
+    [Tooltip("Handle's radius")]
     [SerializeField]
     protected float radiusHandle = 0.25f;
+    [Tooltip("Handle Color when it is selecled")]
     [SerializeField]
     protected Color selectionColorHandle = Color.yellow;
+    [Tooltip("Handle Color when it isn't selecled")]
     [SerializeField]
     protected Color colorHandle = Color.white;
+    [Tooltip("Display index number")]
     [SerializeField]
     protected bool showIndex = true;
 
 #pragma warning restore 414
-
+    /// <summary>
+    /// Returns a position corresponding to the current time on the spline.
+    /// </summary>
+    /// <param name="_time">Current time on the spline (between 0f to 1f).</param>
+    /// <returns>Returns a position on the spline.</returns>
     public Vector3 GetPositionAtTime(float _time)
     {
         return GetPositionAtDistance(GetCurrentDistance(_time));
     }
+    /// <summary>
+    /// Returns a position corresponding to the current distance on the spline.
+    /// </summary>
+    /// <param name="_dist">Current distance on the spline (between 0f to spline length).</param>
+    /// <returns>Returns a position on the spline.</returns>
     public Vector3 GetPositionAtDistance(float _dist)
     {
         float dist = Mathf.Clamp(_dist, 0.0f, segments[segments.Length - 1].p2length);
@@ -231,6 +251,12 @@ public class Spline : MonoBehaviour
         }
         return transform.localPosition;
     }
+    /// <summary>
+    /// Returns a position corresponding to the current distance on the spline.
+    /// </summary>
+    /// <param name="_dist">Current distance on the spline (between 0f to spline length).</param>
+    /// <param name="withCatmullRoom">Get the spline with the Catmull-rom algorithm.</param>
+    /// <returns>Returns a position on the spline.</returns>
     public Vector3 GetPositionAtDistance(float _dist, bool withCatmullRoom)
     {
         float dist = Mathf.Clamp(_dist, 0.0f, segments[segments.Length - 1].p2length);
@@ -296,10 +322,26 @@ public class Spline : MonoBehaviour
         }
         return transform.localPosition;
     }
+    /// <summary>
+    /// Initializes position, direction, angle corresponding to the current time on the spline.
+    /// </summary>
+    /// <param name="transform">The transform to use as a reference(position an direction).</param>
+    /// <param name="position">Sets the current position on the spline.</param>
+    /// <param name="direction">Sets the current direction on the spline.</param>
+    /// <param name="angle">Sets the current angle on the spline.</param>
+    /// <param name="_time">Current Time on the spline (between 0f to 1f).</param>
     public void GetPositionAtTime(Transform transform, out Vector3 position, out Vector3 direction, out float angle, float _time)
     {
         GetPositionAtDistance(transform, out position, out direction, out angle, GetCurrentDistance(_time));
     }
+    /// <summary>
+    /// Initializes position, direction, angle corresponding to the current distance on the spline.
+    /// </summary>
+    /// <param name="transform">The transform to use as a reference(position an direction).</param>
+    /// <param name="position">Sets the current position on the spline.</param>
+    /// <param name="direction">Sets the current direction on the spline.</param>
+    /// <param name="angle">Sets the current angle on the spline.</param>
+    /// <param name="_dist">Current distance on the spline (between 0f to spline length).</param>
     public void GetPositionAtDistance(Transform transform, out Vector3 position, out Vector3 direction, out float angle, float _dist)
     {
         float dist = Mathf.Clamp(_dist, 0.0f, segments[segments.Length - 1].p2length);
@@ -373,6 +415,11 @@ public class Spline : MonoBehaviour
             }
         }
     }
+    /// <summary>
+    /// Returns a distance corresponding to the current time on the spline.
+    /// </summary>
+    /// <param name="_time">Current time on the spline (between 0f to 1f).</param>
+    /// <returns>Returns the current distance on the spline.</returns>
     public float GetCurrentDistance(float _time)
     {
         if (segments != null && segments.Length > 0)
@@ -383,6 +430,11 @@ public class Spline : MonoBehaviour
         }
         else return currentDist;
     }
+    /// <summary>
+    /// Returns a time corresponding to the current distance on the spline.
+    /// </summary>
+    /// <param name="_distance">Current distance on the spline (between 0f to spline length).</param>
+    /// <returns>Returns the current time on the spline.</returns>
     public float GetCurrentTime(float _distance)
     {
         float time = 0.0f;

@@ -67,24 +67,6 @@ public class Movable3DObject : Spline
         set => speed = value;
     }
 
-    /* public Vector3 CurrentDir
-     {
-         get
-         {
-             float sign = 1.0f;
-             if (isReversed)
-             {
-                 sign = -1.0f;
-             }
-
-             if (pingpong)
-             {
-                 sign *= -1.0f;
-             }
-             // Debug.Log(currentDir * sign);
-             return currentDir * sign;
-         }
-     }*/
 
     private void Start()
     {

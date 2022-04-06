@@ -55,9 +55,6 @@ public class PipeMeshGenerator : Spline
         int nbVerticeID = ((nbQuad) * (segments.Length + 1));
         int nbTriangleID = (nbQuad * (segments.Length)) * 6;
 
-        /* Debug.Log(nbVerticeID);
-         Debug.Log(nbTriangleID);*/
-
         ///Set Vertices
         int nbCloseVertices = (closePipe) ? 2 : 0;
 

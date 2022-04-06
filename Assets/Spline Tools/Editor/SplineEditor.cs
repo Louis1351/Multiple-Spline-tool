@@ -13,7 +13,7 @@ public class SplineEditor : Editor
         Remove
     }
 
-    protected SerializedProperty demiCircle;
+    protected SerializedProperty semiCircle;
     protected SerializedProperty rotation;
     protected SerializedProperty currentDist;
     protected SerializedProperty radius;
@@ -240,7 +240,7 @@ public class SplineEditor : Editor
         Vector3 newP1 = Vector3.zero;
         Vector3 newP2 = Vector3.zero;
 
-        float PI2 = Mathf.PI * ((demiCircle.boolValue) ? 1.0f : 2.0f);
+        float PI2 = Mathf.PI * ((semiCircle.boolValue) ? 1.0f : 2.0f);
         float DivPI2 = PI2 / ((close.boolValue) ? segments.arraySize : (segments.arraySize + 1));
 
         Quaternion eulerRot = Quaternion.Euler(rotation.vector3Value.x, rotation.vector3Value.y, rotation.vector3Value.z);
@@ -373,7 +373,7 @@ public class SplineEditor : Editor
         currentDist = serializedObject.FindProperty("currentDist");
 
         circleShape = serializedObject.FindProperty("circleShape");
-        demiCircle = serializedObject.FindProperty("demiCircle");
+        semiCircle = serializedObject.FindProperty("semiCircle");
         radius = serializedObject.FindProperty("radius");
         rotation = serializedObject.FindProperty("rotation");
 
@@ -606,7 +606,7 @@ public class SplineEditor : Editor
 
         EditorGUILayout.PropertyField(radius);
 
-        EditorGUILayout.PropertyField(demiCircle);
+        EditorGUILayout.PropertyField(semiCircle);
         EditorGUILayout.PropertyField(rotation);
 
         if (close.boolValue)
@@ -839,7 +839,6 @@ public class SplineEditor : Editor
             if (plane.Raycast(ray, out float enter))
             {
                 newPosition = ray.GetPoint(enter);
-
 
                 dTest = ((middle - newPosition).magnitude) / component.segments[i].length;
 
