@@ -1,7 +1,8 @@
 # Multiple-Spline-tool
 Solarized dark             |  Solarized Ocean
 :-------------------------:|:-------------------------:
-![](https://github.com/Louis1351/Multiple-Spline-tool/blob/main/Media/Gifs/platform_spline.gif)  |  ![](https://github.com/Louis1351/Multiple-Spline-tool/blob/main/Media/Screenshots/capture4.png)
+![](https://github.com/Louis1351/Multiple-Spline-tool/blob/main/Media/Gifs/platform_spline.gif)  
+|![](https://github.com/Louis1351/Multiple-Spline-tool/blob/main/Media/Screenshots/capture4.png)
 
 
 <p>
