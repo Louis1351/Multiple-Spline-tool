@@ -6,7 +6,7 @@
 </p>
 
 <p float="left">
+<img width="330" height="170" src="https://github.com/Louis1351/Multiple-Spline-tool/blob/main/Media/Screenshots/capture4.png">
 <img width="330" height="170" src="https://github.com/Louis1351/Multiple-Spline-tool/blob/main/Media/Screenshots/capture2.png">
 <img width="330" height="170" src="https://github.com/Louis1351/Multiple-Spline-tool/blob/main/Media/Screenshots/capture3.png">
-<img width="330" height="170" src="https://github.com/Louis1351/Multiple-Spline-tool/blob/main/Media/Screenshots/capture4.png">
 </p>
