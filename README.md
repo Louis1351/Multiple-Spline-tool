@@ -1,2 +1,2 @@
 # Multiple-Spline-tool
-![](https://github.com/Louis1351/Spline-Objects-Tool/blob/master/Images/pres.PNG)
+![](https://github.com/Louis1351/Multiple-Spline-tool/blob/main/Media/Gifs/platform_spline.gif)
