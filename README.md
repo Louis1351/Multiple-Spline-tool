@@ -1,6 +1,7 @@
 # Multiple-Spline-tool
 
 # How to install<h3>
+Add the Spline Tools folder in your Assets folder . The folder contains all the scripts used by the splines .
   
 # How to inherit<h1>
   
