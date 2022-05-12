@@ -1,6 +1,6 @@
 # Multiple-Spline-tool
 # How to install<h3>
-# How to inherit<h2>
+# How to inherit<h1>
 # Overview<h3> 
 Scene View          |  Inspector
 :-------------------------:|:-------------------------:
