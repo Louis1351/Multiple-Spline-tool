@@ -91,7 +91,9 @@ public class Movable3DObject : Spline
                 break;
         }
     }
-
+    /// <summary>
+    /// Update object position with a linear movement .
+    /// </summary>
     private void UpdateLinear()
     {
         if (!isReversed)
@@ -103,7 +105,9 @@ public class Movable3DObject : Spline
             UpdatePositionDESC(loop);
         }
     }
-
+    /// <summary>
+    /// Update object position with a Ping Pong movement .
+    /// </summary>
     private void UpdatePingPong()
     {
         if (!isReversed)
@@ -141,7 +145,9 @@ public class Movable3DObject : Spline
             }
         }
     }
-
+    /// <summary>
+    /// Update object position with a loop movement .
+    /// </summary>
     private void UpdateLoop()
     {
         if (!isReversed)
@@ -153,7 +159,9 @@ public class Movable3DObject : Spline
             UpdatePositionDESC(true);
         }
     }
-
+    /// <summary>
+    /// Active the object's movement.
+    /// </summary>
     public void Play()
     {
         if (startMovement != null)
@@ -163,12 +171,17 @@ public class Movable3DObject : Spline
 
         isMovingOnStart = true;
     }
-
+    /// <summary>
+    /// Disable the object's movement.
+    /// </summary>
     public void Stop()
     {
         isMovingOnStart = false;
     }
-
+    /// <summary>
+    /// Update object position with an ascendent movement .
+    /// </summary>
+    /// <param name="_islooping"> to loop the object at the end of the spline .</param>
     private void UpdatePositionASC(bool _islooping = false)
     {
         if (target && currentDist <= segments[segments.Length - 1].p2length)
@@ -209,7 +222,10 @@ public class Movable3DObject : Spline
             }
         }
     }
-
+    /// <summary>
+    /// Update object position with an descendent movement .
+    /// </summary>
+    /// <param name="_islooping"> to loop the object at the end of the spline .</param>
     private void UpdatePositionDESC(bool _islooping = false)
     {
         if (target && currentDist >= 0.0f)

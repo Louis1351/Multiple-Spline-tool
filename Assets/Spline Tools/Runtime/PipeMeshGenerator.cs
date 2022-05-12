@@ -31,7 +31,10 @@ public class PipeMeshGenerator : Spline
         0,3,1,
         0,2,3
     };
-
+    /// <summary>
+    /// Generate the pipe mesh with an Array of Spline.Segment .
+    /// </summary>
+    /// <param name="segments">Array of Spline.Segment .</param>
     public void Generate(Spline.Segment[] segments)
     {
         if (transform.childCount > 0)
@@ -186,7 +189,9 @@ public class PipeMeshGenerator : Spline
         meshFilter.sharedMesh.RecalculateNormals();
         meshFilter.sharedMesh.RecalculateTangents();
     }
-
+    /// <summary>
+    /// Generate the pipe mesh with the current spline .
+    /// </summary>
     public void Generate()
     {
         List<Vector3> points = new List<Vector3>();
@@ -214,7 +219,7 @@ public class PipeMeshGenerator : Spline
         MeshRenderer meshRenderer = go.AddComponent<MeshRenderer>();
 
         go.transform.SetParent(transform);
-        
+
         if (closePipe)
             meshRenderer.materials = materials;
         else
@@ -364,7 +369,9 @@ public class PipeMeshGenerator : Spline
         meshFilter.sharedMesh.RecalculateNormals();
         meshFilter.sharedMesh.RecalculateTangents();
     }
-
+    /// <summary>
+    /// Save the current pipe mesh inside a folder .
+    /// </summary>
     public void SaveMesh()
     {
 #if UNITY_EDITOR
@@ -376,6 +383,10 @@ public class PipeMeshGenerator : Spline
 #endif
     }
 #if UNITY_EDITOR
+    /// <summary>
+    /// Save a mesh inside a folder .
+    /// </summary>
+    /// <param name="mesh">The mesh to save.</param>
     public static void SaveMesh(Mesh mesh)
     {
         string path = EditorUtility.SaveFilePanel("Save Separate Mesh Asset", "Assets/", mesh.name, "asset");

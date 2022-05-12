@@ -90,7 +90,9 @@ public class Spawnable3DObject : Spline
     [SerializeField]
     private bool autoGenerate = false;
 #pragma warning restore 414
-
+    /// <summary>
+    /// Destroy each object spawned with the spline .
+    /// </summary>
     private void ClearObjects()
     {
         for (int i = transform.childCount - 1; i >= 0; --i)
@@ -99,6 +101,9 @@ public class Spawnable3DObject : Spline
         }
     }
 #if UNITY_EDITOR
+    /// <summary>
+    /// Generate Objects along the spline .
+    /// </summary>
     public void GenerateObjects()
     {
         GameObject go = null;
