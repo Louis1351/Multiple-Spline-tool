@@ -3,10 +3,14 @@
 # How to install<h3>
   
 # How to inherit<h1>
+  
 ```csharp
-[CanEditMultipleObjects]
+public class MySpline : Spline{.....}
+```
+  
+```csharp
 [CustomEditor(typeof(MySpline))]
-public class MySplineEditor : SplineEditor{....}
+public class MySplineEditor : SplineEditor{.....}
 ```
 # Overview<h3> 
 ![](https://github.com/Louis1351/Multiple-Spline-tool/blob/main/Media/Screenshots/capture1.png)
