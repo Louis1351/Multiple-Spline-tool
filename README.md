@@ -19,15 +19,15 @@ public class MySplineEditor : SplineEditor{.....}
   
 Scene View          |  Inspector
 :-------------------------:|:-------------------------:
-![](https://github.com/Louis1351/Multiple-Spline-tool/blob/main/Media/Screenshots/capture1.png)
+|![](https://github.com/Louis1351/Multiple-Spline-tool/blob/main/Media/Screenshots/capture1.png)
   
 Scene View          |  Inspector
 :-------------------------:|:-------------------------:
-![](https://github.com/Louis1351/Multiple-Spline-tool/blob/main/Media/Screenshots/capture1a.png)
+|![](https://github.com/Louis1351/Multiple-Spline-tool/blob/main/Media/Screenshots/capture1a.png)
 
 Scene View          |  Inspector
 :-------------------------:|:-------------------------:
-![](https://github.com/Louis1351/Multiple-Spline-tool/blob/main/Media/Screenshots/capture1b.png)
+|![](https://github.com/Louis1351/Multiple-Spline-tool/blob/main/Media/Screenshots/capture1b.png)
   
 # Spline Example
   
