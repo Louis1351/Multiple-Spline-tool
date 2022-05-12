@@ -3,7 +3,10 @@
 # How to install<h3>
   
 # How to inherit<h1>
-  
+```javascript
+var s = "JavaScript syntax highlighting";
+alert(s);
+```
 # Overview<h3> 
 ![](https://github.com/Louis1351/Multiple-Spline-tool/blob/main/Media/Screenshots/capture1.png)
  
