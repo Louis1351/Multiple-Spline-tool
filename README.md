@@ -17,7 +17,7 @@ public class MySplineEditor : SplineEditor{.....}
   
 ## Inherited Inspector
   
-           |  
+Scene View          |  Inspector
 :-------------------------:|:-------------------------:
 ![](https://github.com/Louis1351/Multiple-Spline-tool/blob/main/Media/Screenshots/capture1.png)
   
