@@ -1,8 +1,9 @@
 # Multiple-Spline-tool
 
 # How to install<h3>
+Add the Spline Tools folder in your Assets folder . The folder contains all the scripts used by the splines .
   
-# How to inherit<h1>
+## How to inherit
   
 ```csharp
 public class MySpline : Spline{.....}
@@ -13,8 +14,12 @@ public class MySpline : Spline{.....}
 public class MySplineEditor : SplineEditor{.....}
 ```
 # Overview<h3> 
+  
+## Inherited Inspector
+  
 ![](https://github.com/Louis1351/Multiple-Spline-tool/blob/main/Media/Screenshots/capture1.png)
- 
+  
+# Spline Example
 Scene View          |  Inspector
 :-------------------------:|:-------------------------:
 ![](https://github.com/Louis1351/Multiple-Spline-tool/blob/main/Media/Gifs/platform_spline.gif)|![](https://github.com/Louis1351/Multiple-Spline-tool/blob/main/Media/Screenshots/capture4.png)
